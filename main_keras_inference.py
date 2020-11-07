@@ -8,7 +8,7 @@ import tensorflow as tf
 gpus = tf.config.experimental.list_physical_devices('GPU')
 if gpus:
   try:
-    tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=6096)])
+    tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=7400)])
   except RuntimeError as e:
     print(e)
 
@@ -27,12 +27,8 @@ if __name__ == '__main__':
 
     datasets.download_dataset(dataset)
 
-    # train the model
-    model = models_keras.build_unet(encoder='resnet18')
-    training_keras.train_model(dataset, model)
-
     # use the train model to run inference on all test scenes
-    inference_keras.run_inference(dataset, model=model, basedir=wandb.run.dir)
+    inference_keras.run_inference(dataset, basedir=wandb.run.dir, model_path="./wandb/run-20201105_224508-1aqk414p/files/model-best.h5")
 
     # scores all the test images compared to the ground truth labels then
     # send the scores (f1, precision, recall) and prediction images to wandb

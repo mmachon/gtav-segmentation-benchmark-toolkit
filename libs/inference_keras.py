@@ -1,7 +1,7 @@
 from PIL import Image
 import numpy as np
 import math
-from keras import models
+from tensorflow.keras import models
 import os
 
 from libs.config import train_ids, test_ids, val_ids, LABELMAP_RGB
@@ -61,11 +61,10 @@ def run_inference(dataset, model=None, model_path=None, basedir='predictions'):
 
     if model is None:
         model = models.load_model(model_path)
-
     for scene in train_ids + val_ids + test_ids:
         imagefile = f'{dataset}/images/{scene}-ortho.tif'
         predsfile = os.path.join(basedir, f'{scene}-prediction.png')
-
+        print(f"save to {predsfile}")
         if not os.path.exists(imagefile):
             continue
 

@@ -1,5 +1,5 @@
-from keras.preprocessing.image import ImageDataGenerator
-from keras.utils import Sequence, to_categorical
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.utils import Sequence, to_categorical
 from PIL import Image
 
 import numpy as np

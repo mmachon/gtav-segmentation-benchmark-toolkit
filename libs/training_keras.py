@@ -1,7 +1,6 @@
-from keras import optimizers, metrics
+from tensorflow.keras import optimizers, metrics
 from libs import datasets_keras
 from libs.config import LABELMAP
-from libs.util_keras import FBeta
 import numpy as np
 
 import wandb
@@ -13,7 +12,7 @@ def train_model(dataset, model):
     lr     = 1e-4
     size   = 300
     wd     = 1e-2
-    bs     = 8 # reduce this if you are running out of GPU memory
+    bs     = 4 # reduce this if you are running out of GPU memory
     pretrained = True
 
     config = {
@@ -33,21 +32,18 @@ def train_model(dataset, model):
         metrics=[
             metrics.Precision(top_k=1, name='precision'),
             metrics.Recall(top_k=1, name='recall'),
-            FBeta(name='f_beta')
+            metrics.MeanIoU(num_classes=6, name='mIOU'),
         ]
     )
 
     train_data, valid_data = datasets_keras.load_dataset(dataset, bs)
     _, ex_data = datasets_keras.load_dataset(dataset, 10)
-    model.fit_generator(
+    model.fit(
         train_data,
         validation_data=valid_data,
         epochs=epochs,
         callbacks=[
             WandbCallback(
-                input_type='image',
-                output_type='segmentation_mask',
-                validation_data=ex_data[0]
             )
         ]
     )
