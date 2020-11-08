@@ -18,7 +18,7 @@ def download_dataset(dataset):
     url = URLS[dataset]
     if not os.path.exists(filename):
         print(f'downloading dataset "{dataset}"')
-        os.system(f'curl "{url}" -o -C - {filename}')
+        os.system(f'curl "{url}" -o {filename}')
     else:
         print(f'zipfile "{filename}" already exists, remove it if you want to re-download.')
 

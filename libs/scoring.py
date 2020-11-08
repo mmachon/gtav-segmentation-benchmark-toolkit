@@ -164,4 +164,4 @@ def score_predictions(dataset, basedir='predictions'):
 
 
 if __name__ == '__main__':
-    score_predictions('dataset-sample')
+    score_predictions('dataset-medium')

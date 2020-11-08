@@ -1,6 +1,7 @@
 from tensorflow.keras import optimizers, metrics
 from libs import datasets_keras
 from libs.config import LABELMAP
+from libs.custom_metrics import MyMeanIOU
 import numpy as np
 
 import wandb
@@ -32,7 +33,7 @@ def train_model(dataset, model):
         metrics=[
             metrics.Precision(top_k=1, name='precision'),
             metrics.Recall(top_k=1, name='recall'),
-            metrics.MeanIoU(num_classes=6, name='mIOU'),
+            MyMeanIOU(num_classes=6, name='mIOU'),
         ]
     )
 
