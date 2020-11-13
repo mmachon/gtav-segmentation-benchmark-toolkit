@@ -1,8 +1,4 @@
-dataset-sample
-dataset-medium
-dataset-large
-dataset-whole
-__pycache__
-wandb
-*.tar.gz
-models
+/aerial_segmentation_benchmark_toolkit/dataset-medium.tar.gz
+/aerial_segmentation_benchmark_toolkit/dataset-sample/
+/aerial_segmentation_benchmark_toolkit/dataset-medium/
+/aerial_segmentation_benchmark_toolkit/experiments/*
