@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 class ModelBackend(ABC):
 
     def __init__(self):
-        pass
+        self.chip_size = 512
 
     def load(self, weights_file_path):
         model_backend = self.compile()

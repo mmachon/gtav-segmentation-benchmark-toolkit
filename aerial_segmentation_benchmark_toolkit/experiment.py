@@ -2,6 +2,7 @@ import datetime
 import zipfile
 from PIL import Image
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
+from tensorflow.keras.backend import clear_session
 from model_analyzer import ModelAnalyzer
 from score.scoring import Scoring
 from util import *
@@ -13,21 +14,25 @@ class Experiment:
 
     def __init__(self, title, dataset, model_backend, batch_size, experiment_directory=""):
         if experiment_directory == "":
-            self.basedir = os.path.join(f"{os.getcwd()}/experiments",
-                                        f"{title}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}")
-            os.makedirs(self.basedir)
-            os.makedirs(f"{self.basedir}/models")
-            os.makedirs(f"{self.basedir}/predictions")
-            os.makedirs(f"{self.basedir}/export")
+            self.experiment_title = f"{title}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
+            self.basedir = os.path.join(f"{os.getcwd()}/experiments", self.experiment_title)
+            self.init_experiment_directory_structure()
             self.model_backend = model_backend.compile()
         else:
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", experiment_directory)
+            print("Loading existing model")
             self.model_backend = model_backend.load(f"{self.basedir}/models/checkpoint")
         self.tensorboard_log = f"{self.basedir}/tensorboard_logs"
         self.dataset = dataset
         self.batch_size = batch_size
         self.model_analyzer = ModelAnalyzer(self.model_backend)
         self.scoring_backend = Scoring(self.basedir)
+
+    def init_experiment_directory_structure(self):
+        os.makedirs(self.basedir)
+        os.makedirs(f"{self.basedir}/models")
+        os.makedirs(f"{self.basedir}/predictions")
+        os.makedirs(f"{self.basedir}/export")
 
     def analyze(self):
         self.dataset.analyze()
@@ -45,8 +50,8 @@ class Experiment:
                             histogram_freq=1,
                             write_images=True,
                             update_freq='epoch',
-                            profile_batch=2,
-                            embeddings_freq=1),
+                            profile_batch='500,510',
+                            embeddings_freq=1,),
                        ModelCheckpoint(
                            filepath=f"{self.basedir}/models/checkpoint",
                            save_weights_only=True,
@@ -66,7 +71,14 @@ class Experiment:
 
         chips = [(chip, xi, yi) for chip, xi, yi in chips if chip.sum() > 0]
         prediction = np.zeros(shape[:2], dtype='uint8')
-        chip_preds = self.model_backend.predict(np.array([chip for chip, _, _ in chips]), verbose=True)
+
+        chip_preds = []
+        for chip in np.array([chip for chip, _, _ in chips]):
+            np.expand_dims(chip, axis=0)
+            predicted_chip = self.model_backend.predict(np.expand_dims(np.array(chip), axis=0))
+            chip_preds.append(np.squeeze(predicted_chip))
+        chip_preds = np.array(chip_preds)
+        # chip_preds = self.model_backend.predict(np.array([chip for chip, _, _ in chips]), verbose=True)
 
         for (chip, x, y), pred in zip(chips, chip_preds):
             category_chip = np.argmax(pred, axis=-1) + 1
@@ -77,10 +89,10 @@ class Experiment:
         Image.fromarray(mask).save(output_file)
 
     def generate_inference_test_files(self):
+        clear_session()
         for scene in test_ids:
             imagefile = f'{self.dataset.dataset_name}/images/{scene}-ortho.tif'
             predsfile = os.path.join(self.basedir, f'predictions/{scene}-prediction.png')
-            print(f"save to {predsfile}")
             if not os.path.exists(imagefile):
                 continue
 
@@ -94,7 +106,7 @@ class Experiment:
         # TODO run inference on multiple images and measure time
         pass
 
-    # Generate an easy to evaluate file for later model comparison
+    # Generate an easy to evaluate file for later model comparsion
     def generate_summary(self):
         pass # TODO
 
@@ -108,7 +120,7 @@ class Experiment:
     def bundle(self):
         print("Creating zip bundle")
         compression = zipfile.ZIP_DEFLATED
-        with zipfile.ZipFile(f"{self.basedir}/modelbundle.zip", mode='w') as zip_file:
+        with zipfile.ZipFile(f"{self.basedir}/{self.experiment_title}.zip", mode='w') as zip_file:
             zip_directory(zip_file, "models", compression, f"{self.basedir}/models")
             zip_directory(zip_file, "tensorboard_logs", compression, f"{self.basedir}/tensorboard_logs")
             zip_file.write(f"{self.basedir}/model_summary.json", "model_summary.json", compress_type=compression)

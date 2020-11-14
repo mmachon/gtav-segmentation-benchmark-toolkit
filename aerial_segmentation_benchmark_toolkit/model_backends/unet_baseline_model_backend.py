@@ -12,7 +12,7 @@ class UnetBaselineModelBackend(ModelBackend):
         super().__init__()
 
     def compile(self):
-        model_backend = self.build_unet(encoder="resnet18")
+        model_backend = self.build_unet(size=self.chip_size, encoder="resnet18")
         model_backend.compile(
             optimizer=optimizers.Adam(lr=1e-4),
             loss='categorical_crossentropy',

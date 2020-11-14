@@ -2,6 +2,7 @@ import sys
 import cv2
 import os
 import numpy as np
+import shutil
 
 from .dd_dataset_config import train_ids, val_ids, test_ids, LABELMAP, INV_LABELMAP
 from .dataset import Dataset
@@ -14,13 +15,13 @@ URLS = {
 
 class DroneDeployDataset(Dataset):
 
-    def __init__(self, dataset, chip_size, chip_stride):
+    def __init__(self, dataset, chip_size):
         super().__init__(dataset)
         if dataset not in URLS:
             print(f"unknown dataset {dataset}")
             sys.exit(0)
         self.chip_size = chip_size
-        self.chip_stride = chip_stride
+        self.chip_stride = chip_size
 
     def download(self):
         """ Download a dataset, extract it and create the tiles """
@@ -40,9 +41,12 @@ class DroneDeployDataset(Dataset):
             print(f'folder "{self.dataset_name}" already exists, remove it if you want to re-create.')
         return self
 
-    def generate_chips(self):
+    def generate_chips(self, reset_chips=False):
         image_chips = f'{self.dataset_name}/image-chips'
         label_chips = f'{self.dataset_name}/label-chips'
+        if reset_chips:
+            shutil.rmtree(image_chips)
+            shutil.rmtree(label_chips)
         if not os.path.exists(image_chips) and not os.path.exists(label_chips):
             print("creating chips")
             self.run_chip_generator()
