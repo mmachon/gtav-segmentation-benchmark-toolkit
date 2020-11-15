@@ -12,7 +12,7 @@ from datasets.dd_dataset_config import test_ids
 
 class Experiment:
 
-    def __init__(self, title, dataset, model_backend, batch_size, experiment_directory=""):
+    def __init__(self, title, dataset, model_backend, batch_size, experiment_directory="", load_best=False):
         if experiment_directory == "":
             self.experiment_title = f"{title}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", self.experiment_title)
@@ -21,7 +21,10 @@ class Experiment:
         else:
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", experiment_directory)
             print("Loading existing model")
-            self.model_backend = model_backend.load(f"{self.basedir}/models/checkpoint")
+            if load_best:
+                self.model_backend = model_backend.load(f"{self.basedir}/models/checkpoint")
+            else:
+                self.model_backend = model_backend.load(f"{self.basedir}/models/last_epoch_model")
         self.tensorboard_log = f"{self.basedir}/tensorboard_logs"
         self.dataset = dataset
         self.batch_size = batch_size

@@ -16,7 +16,8 @@ if __name__ == '__main__':
         .generate_chips()
     model_backend = UnetBaselineModelBackend()
 
-    experiment = Experiment("test", dataset, model_backend, batch_size=1, experiment_directory="test-2020-11-14_18-31-49")
+    experiment = Experiment("test", dataset, model_backend, batch_size=1,
+                            experiment_directory="test-2020-11-14_18-31-49")
     experiment.analyze()
     experiment.train(epochs=5)
     experiment.save_model()

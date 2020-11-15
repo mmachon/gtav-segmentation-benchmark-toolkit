@@ -1,9 +1,8 @@
-from tensorflow.keras import layers, models, metrics, optimizers
+from tensorflow.keras import layers, models, optimizers
 import numpy as np
 import tensorflow as tf
 
 from .model_backend import ModelBackend
-from metrics import CustomMeanIOU
 
 
 class UnetBaselineModelBackend(ModelBackend):
@@ -16,11 +15,7 @@ class UnetBaselineModelBackend(ModelBackend):
         model_backend.compile(
             optimizer=optimizers.Adam(lr=1e-4),
             loss='categorical_crossentropy',
-            metrics=[
-                metrics.Precision(top_k=1, name='precision'),
-                metrics.Recall(top_k=1, name='recall'),
-                CustomMeanIOU(num_classes=6, name='mIOU'),
-            ]
+            metrics=self.metrics
         )
         return model_backend
 

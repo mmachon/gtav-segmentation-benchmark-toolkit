@@ -17,7 +17,8 @@ if __name__ == '__main__':
     model_backend = UnetBaselineModelBackend()
 
     batch_size = 1
-    experiment = Experiment("test", dataset, model_backend, batch_size=batch_size, experiment_directory="test-2020-11-14_18-31-49")
+    experiment = Experiment("test", dataset, model_backend, batch_size=batch_size,
+                            experiment_directory="test-2020-11-14_18-31-49")
 
     experiment.generate_inference_test_files()
     # experiment.score()
