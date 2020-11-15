@@ -34,6 +34,7 @@ class Experiment:
         os.makedirs(self.basedir)
         os.makedirs(f"{self.basedir}/models")
         os.makedirs(f"{self.basedir}/predictions")
+        os.makedirs(f"{self.basedir}/predictions/chips")
         os.makedirs(f"{self.basedir}/export")
 
     def analyze(self):
@@ -68,11 +69,10 @@ class Experiment:
         clear_session()
         for scene in test_ids:
             imagefile = f'{self.dataset.dataset_name}/images/{scene}-ortho.tif'
-            predsfile = os.path.join(self.basedir, f'predictions/{scene}-prediction.png')
             if not os.path.exists(imagefile):
                 continue
             print(f'running inference on image {imagefile}.')
-            generate_predict_image(imagefile, predsfile, self.model_backend, self.dataset.chip_size)
+            generate_predict_image(self.basedir, imagefile, scene, self.model_backend, self.dataset.chip_size)
 
     def score(self):
         self.scoring_backend.score_predictions(self.dataset.dataset_name, self.basedir)
