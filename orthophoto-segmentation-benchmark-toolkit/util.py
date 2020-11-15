@@ -35,7 +35,7 @@ def chips_from_image(img, size):
     return chips
 
 
-def enalbe_dynamic_memory_growth():
+def enable_dynamic_memory_growth():
     import tensorflow as tf
     gpus = tf.config.experimental.list_physical_devices('GPU')
     if gpus:

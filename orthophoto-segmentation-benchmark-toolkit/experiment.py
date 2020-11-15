@@ -1,11 +1,10 @@
 import datetime
 import zipfile
-from PIL import Image
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
 from tensorflow.keras.backend import clear_session
 from model_analyzer import ModelAnalyzer
 from score.scoring import Scoring
-from util import *
+from inference.predict_image import *
 
 from datasets.dd_dataset_config import test_ids
 
@@ -65,32 +64,6 @@ class Experiment:
                        ]
         )
 
-    def predict_image(self, input_file, output_file):
-        size = self.dataset.chip_size
-        with Image.open(input_file).convert('RGB') as img:
-            nimg = np.array(Image.open(input_file).convert('RGB'))
-            shape = nimg.shape
-            chips = chips_from_image(nimg, self.dataset.chip_size)
-
-        chips = [(chip, xi, yi) for chip, xi, yi in chips if chip.sum() > 0]
-        prediction = np.zeros(shape[:2], dtype='uint8')
-
-        chip_preds = []
-        for chip in np.array([chip for chip, _, _ in chips]):
-            np.expand_dims(chip, axis=0)
-            predicted_chip = self.model_backend.predict(np.expand_dims(np.array(chip), axis=0))
-            chip_preds.append(np.squeeze(predicted_chip))
-        chip_preds = np.array(chip_preds)
-        # chip_preds = self.model_backend.predict(np.array([chip for chip, _, _ in chips]), verbose=True)
-
-        for (chip, x, y), pred in zip(chips, chip_preds):
-            category_chip = np.argmax(pred, axis=-1) + 1
-            section = prediction[y:y + size, x:x + size].shape
-            prediction[y:y + size, x:x + size] = category_chip[:section[0], :section[1]]
-
-        mask = category2mask(prediction)
-        Image.fromarray(mask).save(output_file)
-
     def generate_inference_test_files(self):
         clear_session()
         for scene in test_ids:
@@ -98,9 +71,8 @@ class Experiment:
             predsfile = os.path.join(self.basedir, f'predictions/{scene}-prediction.png')
             if not os.path.exists(imagefile):
                 continue
-
             print(f'running inference on image {imagefile}.')
-            self.predict_image(imagefile, predsfile)
+            generate_predict_image(imagefile, predsfile, self.model_backend, self.dataset.chip_size)
 
     def score(self):
         self.scoring_backend.score_predictions(self.dataset.dataset_name, self.basedir)
