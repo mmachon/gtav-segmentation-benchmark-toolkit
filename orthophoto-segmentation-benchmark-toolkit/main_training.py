@@ -2,15 +2,16 @@ import argparse
 
 from experiment import Experiment
 from datasets import DroneDeployDataset
-from util import limit_memory
-from model_backends import UnetBaselineModelBackend
+from util import *
+from model_backends import *
 
-# limit_memory(memory_limit=5000)
+enable_dynamic_memory_growth()
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--experiment", help="model weights of given eperiment will be used for training", default=None)
+    parser.add_argument("--epochs", help="model weights of given eperiment will be used for training", default=30)
+    parser.add_argument("--experiment", help="model weights of given eperiment will be used for training", default="")
     args = parser.parse_args()
 
 
@@ -18,12 +19,12 @@ if __name__ == '__main__':
     size = 512
 
     dataset = DroneDeployDataset(dataset, size).download().generate_chips()
-    model_backend = UnetBaselineModelBackend()
+    model_backend = UnetBackend('efficientnetb3')
 
     experiment = Experiment("test", dataset, model_backend, batch_size=1,
                             experiment_directory=args.experiment, load_best=False)
     experiment.analyze()
-    experiment.train(epochs=6)
+    experiment.train(epochs=args.epochs)
     experiment.save_model()
     experiment.bundle()
     print("Training finished")

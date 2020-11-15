@@ -1,5 +1,7 @@
 from abc import ABC, abstractmethod
 from tensorflow.keras import metrics
+import os
+os.environ["SM_FRAMEWORK"] = "tf.keras"
 
 from metrics import CustomMeanIOU
 
@@ -7,6 +9,7 @@ from metrics import CustomMeanIOU
 class ModelBackend(ABC):
 
     def __init__(self):
+        self.available_backbones = ["resnet50", "efficientnetb3", "mobilenetv3_large", "mobilenetv3_small", "mobilenet_v3_minimal"]
         self.chip_size = 512
         self.metrics = [
                 metrics.Precision(top_k=1, name='precision'),

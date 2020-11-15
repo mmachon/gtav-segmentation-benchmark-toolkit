@@ -11,3 +11,5 @@ Pillow
 sklearn
 keras_flops
 matplotlib
+image-classifiers
+efficientnet
