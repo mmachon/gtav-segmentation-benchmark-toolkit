@@ -2,6 +2,9 @@ import datetime
 import zipfile
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
 from tensorflow.keras.backend import clear_session
+import matplotlib.pyplot as plt
+from tensorflow.keras.callbacks import History
+
 from model_analyzer import ModelAnalyzer
 from score.scoring import Scoring
 from inference.predict_image import *
@@ -44,26 +47,31 @@ class Experiment:
 
     def train(self, epochs):
         train_data, valid_data = self.dataset.load_dataset(self.batch_size)
+        history = History()
         self.model_backend.fit(
             train_data,
             validation_data=valid_data,
             epochs=epochs,
-            callbacks=[TensorBoard(
-                            log_dir=self.tensorboard_log,
-                            histogram_freq=1,
-                            write_images=True,
-                            update_freq='epoch',
-                            profile_batch='500,510',
-                            embeddings_freq=1,),
-                       ModelCheckpoint(
-                           filepath=f"{self.basedir}/models/checkpoint",
-                           save_weights_only=True,
-                           monitor='val_mIOU',
-                           mode='max',
-                           save_best_only=True
-                       )
-                       ]
+            callbacks=[
+                    TensorBoard(
+                                log_dir=self.tensorboard_log,
+                                histogram_freq=1,
+                                write_images=True,
+                                update_freq='epoch',
+                                profile_batch='500,510',
+                                embeddings_freq=1,
+                    ),
+                    ModelCheckpoint(
+                                filepath=f"{self.basedir}/models/checkpoint",
+                                save_weights_only=True,
+                                monitor='val_mIOU',
+                                mode='max',
+                                save_best_only=True
+                    ),
+                    history,
+               ]
         )
+        self.plot_segm_history(history)
 
     def generate_inference_test_files(self):
         clear_session()
@@ -84,6 +92,37 @@ class Experiment:
     # Generate an easy to evaluate file for later model comparsion
     def generate_summary(self):
         pass # TODO
+
+    def plot_segm_history(self, history, metrics=["mIOU", "val_mIOU"], losses=["loss", "val_loss"]):
+        """[summary]
+        https://github.com/karolzak/keras-unet
+        Args:
+            history ([type]): [description]
+            metrics (list, optional): [description]. Defaults to ["miou", "val_miou"].
+            losses (list, optional): [description]. Defaults to ["loss", "val_loss"].
+        """
+        # summarize history for iou
+        plt.figure(figsize=(12, 6))
+        for metric in metrics:
+            plt.plot(history.history[metric], linewidth=3)
+        plt.suptitle("metrics over epochs", fontsize=20)
+        plt.ylabel("metric", fontsize=20)
+        plt.xlabel("epoch", fontsize=20)
+        # plt.yticks(np.arange(0.3, 1, step=0.02), fontsize=35)
+        # plt.xticks(fontsize=35)
+        plt.legend(metrics, loc="center right", fontsize=15)
+        plt.savefig(f"{self.basedir}/plotted_mIOU.png")
+        # summarize history for loss
+        plt.figure(figsize=(12, 6))
+        for loss in losses:
+            plt.plot(history.history[loss], linewidth=3)
+        plt.suptitle("loss over epochs", fontsize=20)
+        plt.ylabel("loss", fontsize=20)
+        plt.xlabel("epoch", fontsize=20)
+        # plt.yticks(np.arange(0, 0.2, step=0.005), fontsize=35)
+        # plt.xticks(fontsize=35)
+        plt.legend(losses, loc="center right", fontsize=15)
+        plt.savefig(f"{self.basedir}/plotted_loss.png")
 
     # Saving model weights of the last epoch
     # Best mIOU related epoch is saved in the checkpoint file
