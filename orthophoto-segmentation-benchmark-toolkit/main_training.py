@@ -15,7 +15,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
 
-    dataset = 'dataset-medium' # 9.0 GB download
+    dataset = 'dataset-sample' # 9.0 GB download
     size = 512
 
     dataset = DroneDeployDataset(dataset, size).download().generate_chips()

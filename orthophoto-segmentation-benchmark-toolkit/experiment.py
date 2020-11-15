@@ -14,7 +14,7 @@ from datasets.dd_dataset_config import test_ids
 
 class Experiment:
 
-    def __init__(self, title, dataset, model_backend, batch_size, experiment_directory="", load_best=False):
+    def __init__(self, title, dataset, model_backend, batch_size, experiment_directory="", load_best=False, enable_tensorboard=False):
         if experiment_directory == "":
             self.experiment_title = f"{title}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", self.experiment_title)
@@ -32,6 +32,7 @@ class Experiment:
         self.batch_size = batch_size
         self.model_analyzer = ModelAnalyzer(self.model_backend)
         self.scoring_backend = Scoring(self.basedir)
+        self.enable_tensorboards = enable_tensorboard
 
     def init_experiment_directory_structure(self):
         os.makedirs(self.basedir)
@@ -48,20 +49,7 @@ class Experiment:
     def train(self, epochs):
         train_data, valid_data = self.dataset.load_dataset(self.batch_size)
         history = History()
-        self.model_backend.fit(
-            train_data,
-            validation_data=valid_data,
-            epochs=epochs,
-            callbacks=[
-                    TensorBoard(
-                                log_dir=self.tensorboard_log,
-                                histogram_freq=1,
-                                write_images=True,
-                                update_freq='epoch',
-                                profile_batch='500,510',
-                                embeddings_freq=1,
-                    ),
-                    ModelCheckpoint(
+        callbacks = [ModelCheckpoint(
                                 filepath=f"{self.basedir}/models/checkpoint",
                                 save_weights_only=True,
                                 monitor='val_mIOU',
@@ -70,6 +58,20 @@ class Experiment:
                     ),
                     history,
                ]
+        if self.enable_tensorboards:
+            callbacks.append(TensorBoard(
+                                log_dir=self.tensorboard_log,
+                                histogram_freq=1,
+                                write_images=True,
+                                update_freq='epoch',
+                                profile_batch='500,510',
+                                embeddings_freq=1,
+                    ))
+        self.model_backend.fit(
+            train_data,
+            validation_data=valid_data,
+            epochs=epochs,
+            callbacks=callbacks
         )
         self.plot_segm_history(history)
 
@@ -132,5 +134,8 @@ class Experiment:
         compression = zipfile.ZIP_DEFLATED
         with zipfile.ZipFile(f"{self.basedir}/{self.experiment_title}.zip", mode='w') as zip_file:
             zip_directory(zip_file, "models", compression, f"{self.basedir}/models")
-            zip_directory(zip_file, "tensorboard_logs", compression, f"{self.basedir}/tensorboard_logs")
+            if self.enable_tensorboards:
+                zip_directory(zip_file, "tensorboard_logs", compression, f"{self.basedir}/tensorboard_logs")
             zip_file.write(f"{self.basedir}/model_summary.json", "model_summary.json", compress_type=compression)
+            zip_file.write(f"{self.basedir}/plotted_loss.png", "plotted_loss.png", compress_type=compression)
+            zip_file.write(f"{self.basedir}/plotted_mIOU.png", "plotted_mIOU.png", compress_type=compression)
