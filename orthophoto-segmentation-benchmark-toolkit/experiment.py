@@ -106,10 +106,8 @@ class Experiment:
         for metric in metrics:
             plt.plot(history.history[metric], linewidth=3)
         plt.suptitle("metrics over epochs", fontsize=20)
-        plt.ylabel("metric", fontsize=20)
+        plt.ylabel("mIOU", fontsize=20)
         plt.xlabel("epoch", fontsize=20)
-        # plt.yticks(np.arange(0.3, 1, step=0.02), fontsize=35)
-        # plt.xticks(fontsize=35)
         plt.legend(metrics, loc="center right", fontsize=15)
         plt.savefig(f"{self.basedir}/plotted_mIOU.png")
         # summarize history for loss
@@ -119,8 +117,6 @@ class Experiment:
         plt.suptitle("loss over epochs", fontsize=20)
         plt.ylabel("loss", fontsize=20)
         plt.xlabel("epoch", fontsize=20)
-        # plt.yticks(np.arange(0, 0.2, step=0.005), fontsize=35)
-        # plt.xticks(fontsize=35)
         plt.legend(losses, loc="center right", fontsize=15)
         plt.savefig(f"{self.basedir}/plotted_loss.png")
 
