@@ -1,5 +1,6 @@
 import datetime
 import zipfile
+import json
 from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
 from tensorflow.keras.backend import clear_session
 import matplotlib.pyplot as plt
@@ -74,6 +75,8 @@ class Experiment:
             callbacks=callbacks
         )
         self.plot_segm_history(history)
+        with open(f"{self.basedir}/train_history.json", 'w') as outfile:
+            json.dump(history.history, outfile)
 
     def generate_inference_test_files(self):
         clear_session()
