@@ -107,6 +107,7 @@ class DroneDeployDataset(Dataset):
                 cv2.imwrite(orthochip_filename, orthochip)
                 cv2.imwrite(labelchip_filename, classchip)
                 counter += 1
+        print(f"Generated {counter} chips")
 
     def get_split(self, scene):
         if scene in train_ids:
@@ -130,6 +131,7 @@ class DroneDeployDataset(Dataset):
             os.mkdir(os.path.join(prefix, 'label-chips'))
 
         lines = [line for line in open(f'{prefix}/index.csv')]
+        lines = list(dict.fromkeys(lines))
         num_images = len(lines) - 1
         print(f"converting {num_images} images to chips - this may take a few minutes but only needs to be done once.")
 
@@ -147,4 +149,5 @@ class DroneDeployDataset(Dataset):
             labelfile = os.path.join(prefix, 'labels', scene + '-label.png')
 
             if os.path.exists(orthofile) and os.path.exists(labelfile):
+                print(f"{lineno}/{len(lines)}")
                 self.image2tile(prefix, scene, dataset, orthofile, labelfile, self.chip_size, self.chip_size, self.chip_stride, self.chip_stride)
