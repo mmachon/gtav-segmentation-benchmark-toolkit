@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     experiment = Experiment("test", dataset, model_backend, batch_size=1)
     experiment.analyze()
-    experiment.train(epochs=10)
+    experiment.train(epochs=2)
     experiment.save_model()
     experiment.generate_inference_test_files()
     experiment.score()
