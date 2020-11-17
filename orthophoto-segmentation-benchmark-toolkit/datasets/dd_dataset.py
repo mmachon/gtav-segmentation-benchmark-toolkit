@@ -180,13 +180,14 @@ class DroneDeployDataset(Dataset):
 
     def enhance_dataset_medium(self):
         label_files = []
-        for file in os.listdir("../dataset-medium/labels"):
+        for file in os.listdir("./dataset-medium/labels"):
             label_files.append(file)
-        os.makedirs("./dataset-medium/cleaned-labels")
+        if not os.path.isdir("./dataset-medium/cleaned-labels"):
+            os.makedirs("./dataset-medium/cleaned-labels")
 
         for i, file in enumerate(label_files):
             print(f"Processing {i + 1}/{len(label_files)}")
-            img = cv2.imread("../dataset-medium/labels/" + file)
+            img = cv2.imread("./dataset-medium/labels/" + file)
 
             ignoreLower = np.array([255, 0, 255], dtype="uint8")
             ignoreUpper = np.array([255, 0, 255], dtype="uint8")
