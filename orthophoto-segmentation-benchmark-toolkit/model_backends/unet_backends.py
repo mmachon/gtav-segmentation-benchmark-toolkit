@@ -1,5 +1,5 @@
 from tensorflow.keras import optimizers
-from segmentation_models import Unet
+from .segmentation_models import Unet
 
 from .model_backend import ModelBackend
 
