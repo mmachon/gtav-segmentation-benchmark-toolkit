@@ -13,3 +13,4 @@ keras_flops
 matplotlib
 image-classifiers
 efficientnet
+scikit-image

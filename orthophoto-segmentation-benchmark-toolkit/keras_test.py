@@ -9,12 +9,12 @@ enable_dynamic_memory_growth()
 if __name__ == '__main__':
     # Use sample dataset for testing the entire routine
     dataset = 'dataset-sample'  #  0.5 GB download
-    # dataset = 'dataset-medium' # 9.0 GB download
+    dataset = 'dataset-medium' # 9.0 GB download
 
-    dataset = DroneDeployDataset(dataset, chip_size=512)\
+    dataset = DroneDeployDataset(dataset, chip_size=320)\
         .download()\
         .generate_chips()
-    model_backend = UnetBaselineModelBackend()
+    model_backend = UnetBaselineModelBackend(320)
 
     experiment = Experiment("test", dataset, model_backend, batch_size=1)
     experiment.analyze()

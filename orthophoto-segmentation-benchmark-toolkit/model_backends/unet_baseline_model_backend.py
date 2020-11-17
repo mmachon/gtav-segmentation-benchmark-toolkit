@@ -7,8 +7,8 @@ from .model_backend import ModelBackend
 
 class UnetBaselineModelBackend(ModelBackend):
 
-    def __init__(self):
-        super().__init__()
+    def __init__(self, chip_size):
+        super().__init__(chip_size=chip_size)
 
     def compile(self):
         model_backend = self.build_unet(size=self.chip_size, encoder="resnet18")

@@ -2,7 +2,13 @@ import sys
 import cv2
 import os
 import numpy as np
+from skimage import morphology
 import shutil
+import json
+from multiprocessing import Pool
+
+from .util import closest_color
+
 
 from .dd_dataset_config import train_ids, val_ids, test_ids, LABELMAP, INV_LABELMAP
 from .dataset import Dataset
@@ -15,13 +21,15 @@ URLS = {
 
 class DroneDeployDataset(Dataset):
 
-    def __init__(self, dataset, chip_size):
+    def __init__(self, dataset, chip_size, worker=8):
         super().__init__(dataset)
         if dataset not in URLS:
             print(f"unknown dataset {dataset}")
             sys.exit(0)
         self.chip_size = chip_size
         self.chip_stride = chip_size
+        self.coverage = {}
+        self.worker = worker
 
     def download(self):
         """ Download a dataset, extract it and create the tiles """
@@ -54,6 +62,9 @@ class DroneDeployDataset(Dataset):
             print(f'chip folders "{image_chips}" and "{label_chips}" already exist, remove them to recreate chips.')
         return self
 
+    def analyze(self):
+        pass # TODO compute label distribution
+
     def color2class(self, orthochip, img):
         ret = np.zeros((img.shape[0], img.shape[1]), dtype='uint8')
         ret = np.dstack([ret, ret, ret])
@@ -66,6 +77,9 @@ class DroneDeployDataset(Dataset):
             return None, None
 
         for color in colors:
+            if tuple(color) not in INV_LABELMAP:
+                available_colors = np.array(list(INV_LABELMAP.keys()))
+                color = closest_color(available_colors, [color])[0]
             locs = np.where((img[:, :, 0] == color[0]) & (img[:, :, 1] == color[1]) & (img[:, :, 2] == color[2]))
             ret[locs[0], locs[1], :] = INV_LABELMAP[tuple(color)] - 1
 
@@ -83,7 +97,6 @@ class DroneDeployDataset(Dataset):
 
         xsize = shape[1]
         ysize = shape[0]
-        print(f"converting {dataset} image {orthofile} {xsize}x{ysize} to chips ...")
 
         counter = 0
 
@@ -107,7 +120,8 @@ class DroneDeployDataset(Dataset):
                 cv2.imwrite(orthochip_filename, orthochip)
                 cv2.imwrite(labelchip_filename, classchip)
                 counter += 1
-        print(f"Generated {counter} chips")
+        chip_coverage = counter * (windowx*windowy) / (xsize*ysize)
+        return chip_coverage
 
     def get_split(self, scene):
         if scene in train_ids:
@@ -118,6 +132,9 @@ class DroneDeployDataset(Dataset):
             return 'test.txt'
 
     def run_chip_generator(self):
+
+        if self.dataset_name=="dataset-medium":
+            self.enhance_dataset_medium()
 
         prefix = self.dataset_name
         open(prefix + '/train.txt', mode='w').close()
@@ -135,19 +152,49 @@ class DroneDeployDataset(Dataset):
         num_images = len(lines) - 1
         print(f"converting {num_images} images to chips - this may take a few minutes but only needs to be done once.")
 
-        for lineno, line in enumerate(lines):
+        pool = Pool(processes=self.worker)
+        results = [result for result in pool.map(self.convertImage, lines) if result]
 
-            line = line.strip().split(' ')
-            scene = line[1]
-            dataset = self.get_split(scene)
+        for scene, coverage in results:
+            self.coverage[scene] = coverage
 
-            if dataset == 'test.txt':
-                print(f"not converting test image {scene} to chips, it will be used for inference.")
-                continue
+        with open(f"{prefix}/{self.chip_size}-chip_coverage-pol.json", 'w') as outfile:
+            json.dump(self.coverage, outfile)
 
-            orthofile = os.path.join(prefix, 'images', scene + '-ortho.tif')
-            labelfile = os.path.join(prefix, 'labels', scene + '-label.png')
+    def convertImage(self, line):
+        line = line.strip().split(' ')
+        scene = line[1]
+        dataset = self.get_split(scene)
+        if dataset == 'test.txt':
+            print(f"not converting test image {scene} to chips, it will be used for inference.")
+            return
 
-            if os.path.exists(orthofile) and os.path.exists(labelfile):
-                print(f"{lineno}/{len(lines)}")
-                self.image2tile(prefix, scene, dataset, orthofile, labelfile, self.chip_size, self.chip_size, self.chip_stride, self.chip_stride)
+        label_dir = "cleaned-labels" if os.path.isdir(f"{self.dataset_name}/cleaned-labels") else "labels"
+        orthofile = os.path.join(self.dataset_name, 'images', scene + '-ortho.tif')
+        labelfile = os.path.join(self.dataset_name, label_dir, scene + '-label.png')
+        if os.path.exists(orthofile) and os.path.exists(labelfile):
+            scene_coverage = self.image2tile(self.dataset_name, scene, dataset, orthofile, labelfile, self.chip_size,
+                                             self.chip_size, self.chip_stride, self.chip_stride)
+            print(f"Processed {scene} with a coverage of {round(scene_coverage*100,2)}%")
+            return scene, scene_coverage
+
+    def enhance_dataset_medium(self):
+        label_files = []
+        for file in os.listdir("../dataset-medium/labels"):
+            label_files.append(file)
+        os.makedirs("./dataset-medium/cleaned-labels")
+
+        for i, file in enumerate(label_files):
+            print(f"Processing {i + 1}/{len(label_files)}")
+            img = cv2.imread("../dataset-medium/labels/" + file)
+
+            ignoreLower = np.array([255, 0, 255], dtype="uint8")
+            ignoreUpper = np.array([255, 0, 255], dtype="uint8")
+
+            ignoreMask = cv2.inRange(img, ignoreLower, ignoreUpper)
+            imglab = morphology.label(ignoreMask)  # create labels in segmented image
+            cleaned = morphology.remove_small_objects(imglab, min_size=256, connectivity=2)
+            mask = (imglab - cleaned)
+
+            cleaned_img = cv2.inpaint(img, np.uint8(mask), 3, cv2.INPAINT_TELEA)
+            cv2.imwrite("./dataset-medium/cleaned-labels/" + file, cleaned_img)

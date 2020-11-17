@@ -11,7 +11,7 @@ enable_dynamic_memory_growth()
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", help="model weights of given eperiment will be used for training", default=30)
-    parser.add_argument("--bs", help="model weights of given eperiment will be used for training", default=8)
+    parser.add_argument("--bs", help="model weights of given eperiment will be used for training", default=1)
     parser.add_argument("--experiment", help="model weights of given eperiment will be used for training", default="")
     args = parser.parse_args()
 
