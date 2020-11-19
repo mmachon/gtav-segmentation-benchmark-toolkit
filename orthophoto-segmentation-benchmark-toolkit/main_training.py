@@ -11,7 +11,7 @@ enable_dynamic_memory_growth()
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", help="epochs", default=30)
-    parser.add_argument("--bs", help="batch_size", default=1)
+    parser.add_argument("--bs", help="batch_size", default=4)
     parser.add_argument("--experiment", help="model weights of given eperiment will be used for training", default="")
     args = parser.parse_args()
 
@@ -22,7 +22,7 @@ if __name__ == '__main__':
     size = 320
 
     #SET MODEL
-    backbone = 'efficientnetb3'
+    backbone = 'resnet50'
     model_backend = UnetBackend(backbone, size)
 
     dataset = DroneDeployDataset(dataset_id, size).download().generate_chips()

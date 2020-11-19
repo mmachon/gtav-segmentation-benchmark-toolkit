@@ -4,7 +4,7 @@ from PIL import Image
 
 import numpy as np
 import random
-
+import os
 
 class Dataset:
 
@@ -12,8 +12,8 @@ class Dataset:
         self.dataset_name = dataset_name
 
     def load_dataset(self, bs, aug={'horizontal_flip': True, 'vertical_flip': True, 'rotation_range': 180}):
-        train_files = [f'{self.dataset_name}/image-chips/{fname}' for fname in self.load_lines(f'{self.dataset_name}/train.txt')]
-        valid_files = [f'{self.dataset_name}/image-chips/{fname}' for fname in self.load_lines(f'{self.dataset_name}/valid.txt')]
+        train_files = [f"/training/{img_file}" for img_file in os.listdir(f'{self.dataset_name}/image-chips/training')]
+        valid_files = [f"/validation/{img_file}" for img_file in os.listdir(f'{self.dataset_name}/image-chips/validation')]
 
         train_seq = SegmentationSequence(
             self.dataset_name,
@@ -62,10 +62,9 @@ class SegmentationSequence(Sequence):
 
     def __getitem__(self, idx):
         image_files = self.image_files[idx * self.bs:(idx + 1) * self.bs]
-        label_files = [fname.replace(self.image_path, self.label_path) for fname in image_files]
 
-        images = [load_img(fname) for fname in image_files]
-        labels = [mask_to_classes(load_img(fname)) for fname in label_files]
+        images = [load_img(self.image_path + fname) for fname in image_files]
+        labels = [mask_to_classes(load_img(self.label_path + fname)) for fname in image_files]
 
         ts = [self.datagen.get_random_transform(im.shape) for im in images]
         images = [self.datagen.apply_transform(im, ts) for im, ts in zip(images, ts)]

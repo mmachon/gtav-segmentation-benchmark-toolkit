@@ -1,6 +1,7 @@
 import sys
 import cv2
 import os
+import random
 import numpy as np
 from skimage import morphology
 import shutil
@@ -63,7 +64,8 @@ class DroneDeployDataset(Dataset):
         return self
 
     def analyze(self):
-        pass # TODO compute label distribution
+        pass # TODO compute class label distribution for each chip set
+
 
     def color2class(self, orthochip, img):
         ret = np.zeros((img.shape[0], img.shape[1]), dtype='uint8')
@@ -111,8 +113,16 @@ class DroneDeployDataset(Dataset):
                 if classchip is None:
                     continue
 
-                orthochip_filename = os.path.join(prefix, 'image-chips', scene + '-' + str(counter).zfill(6) + '.png')
-                labelchip_filename = os.path.join(prefix, 'label-chips', scene + '-' + str(counter).zfill(6) + '.png')
+                if random.random() < 0.66:
+                    orthochip_filename = os.path.join(prefix, 'image-chips/training', scene + '-' + str(counter).zfill(6) + '.png')
+                    labelchip_filename = os.path.join(prefix, 'label-chips/training', scene + '-' + str(counter).zfill(6) + '.png')
+                elif random.random() < 0.50:
+                    orthochip_filename = os.path.join(prefix, 'image-chips/validation', scene + '-' + str(counter).zfill(6) + '.png')
+                    labelchip_filename = os.path.join(prefix, 'label-chips/validation', scene + '-' + str(counter).zfill(6) + '.png')
+                else:
+                    orthochip_filename = os.path.join(prefix, 'image-chips/test', scene + '-' + str(counter).zfill(6) + '.png')
+                    labelchip_filename = os.path.join(prefix, 'label-chips/test', scene + '-' + str(counter).zfill(6) + '.png')
+
 
                 with open(f"{prefix}/{dataset}", mode='a') as fd:
                     fd.write(scene + '-' + str(counter).zfill(6) + '.png\n')
@@ -121,7 +131,7 @@ class DroneDeployDataset(Dataset):
                 cv2.imwrite(labelchip_filename, classchip)
                 counter += 1
         chip_coverage = counter * (windowx*windowy) / (xsize*ysize)
-        return chip_coverage
+        return counter, chip_coverage
 
     def get_split(self, scene):
         if scene in train_ids:
@@ -134,7 +144,8 @@ class DroneDeployDataset(Dataset):
     def run_chip_generator(self):
 
         if self.dataset_name=="dataset-medium":
-            self.enhance_dataset_medium()
+            if not os.path.isdir("./dataset-medium/cleaned-labels"):
+                self.enhance_dataset_medium()
 
         prefix = self.dataset_name
         open(prefix + '/train.txt', mode='w').close()
@@ -143,9 +154,15 @@ class DroneDeployDataset(Dataset):
 
         if not os.path.exists(os.path.join(prefix, 'image-chips')):
             os.mkdir(os.path.join(prefix, 'image-chips'))
+            os.mkdir(os.path.join(prefix, 'image-chips/training'))
+            os.mkdir(os.path.join(prefix, 'image-chips/validation'))
+            os.mkdir(os.path.join(prefix, 'image-chips/test'))
 
         if not os.path.exists(os.path.join(prefix, 'label-chips')):
             os.mkdir(os.path.join(prefix, 'label-chips'))
+            os.mkdir(os.path.join(prefix, 'label-chips/training'))
+            os.mkdir(os.path.join(prefix, 'label-chips/validation'))
+            os.mkdir(os.path.join(prefix, 'label-chips/test'))
 
         lines = [line for line in open(f'{prefix}/index.csv')]
         lines = list(dict.fromkeys(lines))
@@ -161,21 +178,20 @@ class DroneDeployDataset(Dataset):
         with open(f"{prefix}/{self.chip_size}-chip_coverage-pol.json", 'w') as outfile:
             json.dump(self.coverage, outfile)
 
+        self.analyze()
+
     def convertImage(self, line):
         line = line.strip().split(' ')
         scene = line[1]
         dataset = self.get_split(scene)
-        if dataset == 'test.txt':
-            print(f"not converting test image {scene} to chips, it will be used for inference.")
-            return
 
         label_dir = "cleaned-labels" if os.path.isdir(f"{self.dataset_name}/cleaned-labels") else "labels"
         orthofile = os.path.join(self.dataset_name, 'images', scene + '-ortho.tif')
         labelfile = os.path.join(self.dataset_name, label_dir, scene + '-label.png')
         if os.path.exists(orthofile) and os.path.exists(labelfile):
-            scene_coverage = self.image2tile(self.dataset_name, scene, dataset, orthofile, labelfile, self.chip_size,
+            chip_count, scene_coverage = self.image2tile(self.dataset_name, scene, dataset, orthofile, labelfile, self.chip_size,
                                              self.chip_size, self.chip_stride, self.chip_stride)
-            print(f"Processed {scene} with a coverage of {round(scene_coverage*100,2)}%")
+            print(f"Processed {scene} -> Generated {chip_count} chips with a image coverage of {round(scene_coverage*100,2)}%")
             return scene, scene_coverage
 
     def enhance_dataset_medium(self):
