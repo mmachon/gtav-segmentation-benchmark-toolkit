@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.callbacks import History
 
 from model_analyzer import ModelAnalyzer
-from score.scoring import Scoring
+from scoring import *
 from inference.predict_image import *
 
 from datasets.dd_dataset_config import test_ids
@@ -32,7 +32,7 @@ class Experiment:
         self.dataset = dataset
         self.batch_size = batch_size
         self.model_analyzer = ModelAnalyzer(self.model_backend)
-        self.scoring_backend = Scoring(self.basedir)
+        self.scoring_backend = ChipSetScoring(self.basedir)
         self.enable_tensorboards = enable_tensorboard
 
     def init_experiment_directory_structure(self):
@@ -43,7 +43,6 @@ class Experiment:
         os.makedirs(f"{self.basedir}/export")
 
     def analyze(self):
-        self.dataset.analyze()
         self.model_analyzer.analyze(self.batch_size)
         self.model_analyzer.saveToJSON(self.basedir)
 
@@ -78,6 +77,9 @@ class Experiment:
         with open(f"{self.basedir}/train_history.json", 'w') as outfile:
             json.dump(history.history, outfile)
 
+    def predict(self, imagefile, output):
+        generate_predict_image(self.basedir, imagefile, output, self.model_backend, self.dataset.chip_size)
+
     def generate_inference_test_files(self):
         clear_session()
         for scene in test_ids:
@@ -88,13 +90,15 @@ class Experiment:
             generate_predict_image(self.basedir, imagefile, scene, self.model_backend, self.dataset.chip_size)
 
     def score(self):
-        self.scoring_backend.score_predictions(self.dataset.dataset_name, self.basedir)
+        self.scoring_backend.score_predictions(self.dataset.dataset_name)
 
-    def benchmark(self):
-        # TODO run inference on multiple images and measure time
-        pass
+    def benchmark_inference(self):
+        chip_file_list = [f"./{self.dataset.dataset_name}/image-chips/test/{chip_file}"
+                          for chip_file in os.listdir(f"./{self.dataset.dataset_name}/image-chips/test")]
+        predict_chips(self.basedir, chip_file_list, self.model_backend)
 
     # Generate an easy to evaluate file for later model comparsion
+    # csv format?
     def generate_summary(self):
         pass # TODO
 

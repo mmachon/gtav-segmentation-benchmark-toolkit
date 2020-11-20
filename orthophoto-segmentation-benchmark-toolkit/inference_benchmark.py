@@ -10,9 +10,7 @@ from metrics import CustomMeanIOU
 enable_dynamic_memory_growth()
 
 if __name__ == '__main__':
-    # Use sample dataset for testing the entire routine
-    #dataset = 'dataset-sample'  #  0.5 GB download
-    dataset = 'dataset-medium' # 9.0 GB download
+    dataset = 'dataset-medium'  # 9.0 GB download
 
     dataset = DroneDeployDataset(dataset, 320).download().generate_chips()
     model_backend = UnetBackend("resnet50")
@@ -21,5 +19,4 @@ if __name__ == '__main__':
     experiment = Experiment("test", dataset, model_backend, batch_size=batch_size,
                             experiment_directory="test-2020-11-18_14-20-23", load_best=True)
 
-    #  experiment.generate_inference_test_files()
-    experiment.score()
+    experiment.benchmark_inference()
