@@ -6,6 +6,7 @@ import numpy as np
 import random
 import os
 
+
 class Dataset:
 
     def __init__(self, dataset_name):
@@ -35,7 +36,10 @@ class Dataset:
         with open(fname, 'r') as f:
             return [l.strip() for l in f.readlines()]
 
-    def analyze(self):
+    def analyze(self, label_dir):
+        pass
+
+    def analyze_label_distribution(self, image):
         pass
 
 

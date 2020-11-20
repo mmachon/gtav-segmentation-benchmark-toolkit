@@ -63,9 +63,48 @@ class DroneDeployDataset(Dataset):
             print(f'chip folders "{image_chips}" and "{label_chips}" already exist, remove them to recreate chips.')
         return self
 
-    def analyze(self):
-        pass # TODO compute class label distribution for each chip set
+    def analyze(self, label_dir):
+        image_list = os.listdir(label_dir)
+        images = []
+        for img in image_list:
+            images.append(cv2.imread(f"{label_dir}/{img}"))
+        images = np.array(images)
+        total_class_pixel_count = {key: 0 for key in LABELMAP.keys()}
+        total_pixel = 0
+        for image in images:
+            image_class_distribution, image_total_pixel = self.analyze_tile_label_distribution(image)
+            total_pixel = total_pixel + image_total_pixel
+            for label_class, pixel_count in image_class_distribution.items():
+                total_class_pixel_count[label_class] = total_class_pixel_count[label_class] + pixel_count
+        total_class_distribution = {label_class: pixel_count/total_pixel for label_class, pixel_count in total_class_pixel_count.items()}
+        return total_class_distribution
 
+    def analyze_tile_label_distribution(self, img):
+        total_pixel = img.shape[0] * img.shape[1]
+        unique, count = np.unique(img.reshape(img.shape[0] * img.shape[1], img.shape[2]), axis=0, return_counts=True)
+        unique_labels = dict(zip(np.unique(unique), count))
+        return unique_labels, total_pixel
+
+    def analyze_image_label_distribution(self, img):
+        total_pixel = img.shape[0] * img.shape[1]
+        pixel_count = {}
+        for label_class, color in LABELMAP.items():
+            pixel_count[label_class] = self.count_pixel(img)
+        return pixel_count, total_pixel
+
+    def count_pixel(self, img, color):
+        # creates numpy array from boundaries
+        color = np.array(color, dtype="uint8")
+        # finds colors in boundaries a applies a mask
+        mask = cv2.inRange(img, color, color)
+        output = cv2.bitwise_and(img, img, mask=mask)
+        count = 0
+        for x in output:
+            for y in x:
+                non_zeros = np.count_nonzero(y)
+                if non_zeros > 0:
+                    count = count + 1
+        return count
 
     def color2class(self, orthochip, img):
         ret = np.zeros((img.shape[0], img.shape[1]), dtype='uint8')
