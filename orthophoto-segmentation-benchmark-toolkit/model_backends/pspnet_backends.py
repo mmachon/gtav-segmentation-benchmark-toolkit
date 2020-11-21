@@ -1,7 +1,7 @@
 from tensorflow.keras import optimizers
 from .segmentation_models import PSPNet
 
-from .model_backend import ModelBackend
+from .segmentation_models_backend import ModelBackend
 
 
 class PSPnetBackend(ModelBackend):

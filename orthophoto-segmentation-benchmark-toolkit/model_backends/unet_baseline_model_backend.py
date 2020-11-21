@@ -2,7 +2,7 @@ from tensorflow.keras import layers, models, optimizers
 import numpy as np
 import tensorflow as tf
 
-from .model_backend import ModelBackend
+from .segmentation_models_backend import ModelBackend
 
 
 class UnetBaselineModelBackend(ModelBackend):

@@ -3,7 +3,7 @@ import argparse
 from experiment import Experiment
 from datasets import DroneDeployDataset
 from util import *
-from model_backends import UnetBackend, PSPnetBackend, FPNBackend
+from model_backends import *
 
 enable_dynamic_memory_growth()
 
@@ -11,7 +11,7 @@ enable_dynamic_memory_growth()
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument("--epochs", help="epochs", default=30)
-    parser.add_argument("--bs", help="batch_size", default=4)
+    parser.add_argument("--bs", help="batch_size", default=1)
     parser.add_argument("--experiment", help="model weights of given eperiment will be used for training", default="")
     args = parser.parse_args()
 
@@ -22,8 +22,8 @@ if __name__ == '__main__':
     size = 320
 
     #SET MODEL
-    backbone = 'mobilenetv3small'
-    model_backend = PSPnetBackend(backbone, size).compile().summary()
+    backbone = 'resnet50'
+    model_backend = FCN8Backend(size)
 
     dataset = DroneDeployDataset(dataset_id, size).download().generate_chips()
     experiment = Experiment("test", dataset, model_backend, batch_size=args.bs,
