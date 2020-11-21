@@ -52,8 +52,8 @@ class BackbonesFactory(ModelsFactory):
         'mobilenet': ('conv_pw_11_relu', 'conv_pw_5_relu', 'conv_pw_3_relu', 'conv_pw_1_relu'),
         'mobilenetv2': ('block_13_expand_relu', 'block_6_expand_relu', 'block_3_expand_relu',
                         'block_1_expand_relu'),
-        'mobilenetv3': ('Conv_1', 'activation_29', 'activation_15', 'activation_6'),
-        'mobilenetv3small': ('activation_31', 'activation_22', 'activation_7', 'activation_3'),
+        'mobilenetv3': ('activation_29', 'activation_15', 'activation_6', 'activation_2'),
+        'mobilenetv3small': ('activation_22', 'activation_7', 'activation_3', 'activation'),
 
         # EfficientNets
         'efficientnetb0': ('block6a_expand_activation', 'block4a_expand_activation',
