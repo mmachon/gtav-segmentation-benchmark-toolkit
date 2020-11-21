@@ -3,7 +3,7 @@ import argparse
 from experiment import Experiment
 from datasets import DroneDeployDataset
 from util import *
-from model_backends import *
+from model_backends import UnetBackend, PSPnetBackend, FPNBackend
 
 enable_dynamic_memory_growth()
 
@@ -22,8 +22,8 @@ if __name__ == '__main__':
     size = 320
 
     #SET MODEL
-    backbone = 'resnet50'
-    model_backend = UnetBackend(backbone, size)
+    backbone = 'mobilenetv3small'
+    model_backend = PSPnetBackend(backbone, size).compile().summary()
 
     dataset = DroneDeployDataset(dataset_id, size).download().generate_chips()
     experiment = Experiment("test", dataset, model_backend, batch_size=args.bs,

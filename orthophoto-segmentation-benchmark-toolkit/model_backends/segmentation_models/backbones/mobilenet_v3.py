@@ -115,18 +115,6 @@ def preprocess_input(x):
             ImageNet dataset.
     """
     x = _preprocess_input(x, mode='tf', backend=K)
-    #x /= 255.
-    #mean = [0.485, 0.456, 0.406]
-    #std = [0.229, 0.224, 0.225]
-
-    #x[..., 0] -= mean[0]
-    #x[..., 1] -= mean[1]
-    #x[..., 2] -= mean[2]
-    #if std is not None:
-        #x[..., 0] /= std[0]
-        #x[..., 1] /= std[1]
-        #x[..., 2] /= std[2]
-
     return x
 
 
@@ -334,50 +322,50 @@ def MobileNetV3(stack_fn,
 
     # Determine proper input shape and default size.
     # If both input_shape and input_tensor are used, they should match
-    #if input_shape is not None and input_tensor is not None:
-        #try:
-            #is_input_t_tensor = K.is_keras_tensor(input_tensor)
-        #except ValueError:
-            #try:
-                #is_input_t_tensor = K.is_keras_tensor(
-                    #get_source_inputs(input_tensor))
-            #except ValueError:
-                #raise ValueError('input_tensor: ', input_tensor,
-                                 #'is not type input_tensor')
-        #if is_input_t_tensor:
-            #if K.image_data_format == 'channels_first':
-                #if K.int_shape(input_tensor)[1] != input_shape[1]:
-                    #raise ValueError('input_shape: ', input_shape,
-                                     #'and input_tensor: ', input_tensor,
-                                     #'do not meet the same shape requirements')
-            #else:
-                #if K.int_shape(input_tensor)[2] != input_shape[1]:
-                    #raise ValueError('input_shape: ', input_shape,
-                                     #'and input_tensor: ', input_tensor,
-                                     #'do not meet the same shape requirements')
-        #else:
-            #raise ValueError('input_tensor specified: ', input_tensor,
-                             #'is not a keras tensor')
+    if input_shape is not None and input_tensor is not None:
+        try:
+            is_input_t_tensor = K.is_keras_tensor(input_tensor)
+        except ValueError:
+            try:
+                is_input_t_tensor = K.is_keras_tensor(
+                    get_source_inputs(input_tensor))
+            except ValueError:
+                raise ValueError('input_tensor: ', input_tensor,
+                                 'is not type input_tensor')
+        if is_input_t_tensor:
+            if K.image_data_format == 'channels_first':
+                if K.int_shape(input_tensor)[1] != input_shape[1]:
+                    raise ValueError('input_shape: ', input_shape,
+                                     'and input_tensor: ', input_tensor,
+                                     'do not meet the same shape requirements')
+            else:
+                if K.int_shape(input_tensor)[2] != input_shape[1]:
+                    raise ValueError('input_shape: ', input_shape,
+                                     'and input_tensor: ', input_tensor,
+                                     'do not meet the same shape requirements')
+        else:
+            raise ValueError('input_tensor specified: ', input_tensor,
+                             'is not a keras tensor')
 
     # If input_shape is None, infer shape from input_tensor
     #if input_shape is None and input_tensor is not None:
 
-        #try:
-            #K.is_keras_tensor(input_tensor)
-        #except ValueError:
-            #raise ValueError('input_tensor: ', input_tensor,
-                             #'is type: ', type(input_tensor),
-                             #'which is not a valid type')
+        try:
+            K.is_keras_tensor(input_tensor)
+        except ValueError:
+            raise ValueError('input_tensor: ', input_tensor,
+                             'is type: ', type(input_tensor),
+                             'which is not a valid type')
 
-        #if K.is_keras_tensor(input_tensor):
-            #if K.image_data_format() == 'channels_first':
-                #rows = K.int_shape(input_tensor)[2]
-                #cols = K.int_shape(input_tensor)[3]
-                #input_shape = (3, cols, rows)
-            #else:
-                #rows = K.int_shape(input_tensor)[1]
-                #cols = K.int_shape(input_tensor)[2]
-                #input_shape = (cols, rows, 3)
+        if K.is_keras_tensor(input_tensor):
+            if K.image_data_format() == 'channels_first':
+                rows = K.int_shape(input_tensor)[2]
+                cols = K.int_shape(input_tensor)[3]
+                input_shape = (3, cols, rows)
+            else:
+                rows = K.int_shape(input_tensor)[1]
+                cols = K.int_shape(input_tensor)[2]
+                input_shape = (cols, rows, 3)
 
     # If input_shape is None and input_tensor is None using standart shape
     if input_shape is None and input_tensor is None:
@@ -408,10 +396,10 @@ def MobileNetV3(stack_fn,
     if input_tensor is None:
         img_input = Input(shape=input_shape)
     else:
-        #if not K.is_keras_tensor(input_tensor):
-            #img_input = Input(tensor=input_tensor, shape=input_shape)
-        #else:
-            #img_input = input_tensor
+        if not K.is_keras_tensor(input_tensor):
+            img_input = Input(tensor=input_tensor, shape=input_shape)
+        else:
+            img_input = input_tensor
         img_input = input_tensor
 
     channel_axis = 1 if K.image_data_format() == 'channels_first' else -1
