@@ -3,10 +3,9 @@ from PIL import Image
 from util import *
 import cv2
 from timeit import default_timer as timer
-from progress.bar import Bar
 
 
-def predict_chips(basedir, chip_file_list, model, save_predictions=True):
+def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=True):
     # LOAD CHIPS IN MEMORY
     print(f"Loading {len(chip_file_list)} chips")
     chip_files = [(np.array(Image.open(chip_file).convert('RGB')), os.path.basename(chip_file)) for chip_file in chip_file_list]
@@ -31,6 +30,7 @@ def predict_chips(basedir, chip_file_list, model, save_predictions=True):
             mask = category2mask(category_chip)
             mask_img = Image.fromarray(mask)
             mask_img.save(f"{basedir}/predictions/test-chip-predictions/{chip_id}")
+    return inference_timings
 
 
 def generate_predict_image(basedir, input_file, output, model, chip_size):

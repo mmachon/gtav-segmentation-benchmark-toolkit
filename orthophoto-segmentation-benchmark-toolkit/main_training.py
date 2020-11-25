@@ -3,33 +3,52 @@ import argparse
 from experiment import Experiment
 from datasets import DroneDeployDataset
 from util import *
-from model_backends import UnetBackend, PSPnetBackend, FPNBackend, Deeplabv3plusBackend
-
-enable_dynamic_memory_growth()
-
+from model_backends import UnetBackend, PSPnetBackend, FPNBackend, Deeplabv3plusBackend, UnetBaselineModelBackend
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument("--epochs", help="epochs", default=30)
-    parser.add_argument("--bs", help="batch_size", default=8)
-    parser.add_argument("--experiment", help="model weights of given eperiment will be used for training", default="")
+    parser.add_argument("-t", "--train", help="train model", action="store_true")
+    parser.add_argument("-b", "--benchmark", help="run inference", action="store_true")
+    parser.add_argument("-s", "--score", help="score model", action="store_true")
+    parser.add_argument("-p", "--predict", help="score model", action="store_true")
     args = parser.parse_args()
 
-    # SET DATASET
-    dataset_id = 'dataset-medium' # 9.0 GB download
+    config = {
+        "experiment_title": "dd_unet_resnet18-2020-11-22_02-46-54",
+        "dataset_id": "dataset-medium",
+        "chip_size": 384,
+        "batch_size": 16,
+        "epochs": 40,
+        "model_backbone": "mobilenetv3",
+        "model_backend": PSPnetBackend,
+        "load_experiment": "",
+        "load_best_model": True,
+    }
 
-    # SET CHIP SIZE
-    size = 384
+    enable_dynamic_memory_growth()
 
-    #SET MODEL
-    backbone = 'mobilenetv3small'
-    model_backend = Deeplabv3plusBackend(size)
+    dataset = DroneDeployDataset(config["dataset_id"], config["chip_size"]).download().generate_chips()
+    model_backend = config["model_backend"](config["model_backbone"], config["chip_size"])
+    experiment = Experiment(config["experiment_title"], dataset, model_backend, batch_size=config["batch_size"],
+                            experiment_directory=config["load_experiment"], load_best=config["load_best_model"])
 
-    dataset = DroneDeployDataset(dataset_id, size).download().generate_chips()
-    experiment = Experiment("test", dataset, model_backend, batch_size=args.bs,
-                            experiment_directory=args.experiment, load_best=False)
-    experiment.analyze()
-    experiment.train(epochs=args.epochs)
-    experiment.save_model()
-    experiment.bundle()
-    print("Training finished")
+    if args.train:
+        experiment.analyze()
+        experiment.train(epochs=config["epochs"])
+        experiment.save_model()
+        experiment.bundle()
+        print("Training finished")
+        exit()
+
+    if args.benchmark:
+        if config["load_experiment"] is None:
+            exit("No model selected")
+        experiment.benchmark_inference()
+
+    if args.score:
+        experiment.score()
+        exit()
+
+    if args.predict:
+        # TODO
+        exit()

@@ -23,7 +23,7 @@ class Experiment:
             self.model_backend = model_backend.compile()
         else:
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", experiment_directory)
-            print("Loading existing model")
+            print(f"Loading experiment {experiment_directory}")
             if load_best:
                 self.model_backend = model_backend.load(f"{self.basedir}/models/checkpoint")
             else:
@@ -41,6 +41,9 @@ class Experiment:
         os.makedirs(f"{self.basedir}/predictions")
         os.makedirs(f"{self.basedir}/predictions/chips")
         os.makedirs(f"{self.basedir}/export")
+
+    def save_config(self):
+        pass
 
     def analyze(self):
         self.model_analyzer.analyze(self.batch_size)
@@ -90,12 +93,21 @@ class Experiment:
             generate_predict_image(self.basedir, imagefile, scene, self.model_backend, self.dataset.chip_size)
 
     def score(self):
-        self.scoring_backend.score_predictions(self.dataset.dataset_name)
+        scores = self.scoring_backend.score_predictions(self.dataset.dataset_name)
+        with open(f"{self.basedir}/scores.json") as score_json:
+            json.dump(scores, score_json)
 
     def benchmark_inference(self):
+        print("Starting Benchmark")
         chip_file_list = [f"./{self.dataset.dataset_name}/image-chips/test/{chip_file}"
                           for chip_file in os.listdir(f"./{self.dataset.dataset_name}/image-chips/test")]
-        predict_chips(self.basedir, chip_file_list, self.model_backend)
+        inference_timings = predict_chips_benchmark(self.basedir, chip_file_list, self.model_backend)
+        with open(f"{self.basedir}/inferenc_benchmark.json", "w") as inference_json:
+            json.dump({"timings": inference_timings,
+                       "mean": np.mean(inference_timings),
+                       "std": np.std(inference_timings),
+                       "median": np.median(inference_timings),
+                       "90_perc": np.percentile(inference_timings, 90)}, inference_json)
 
     # Generate an easy to evaluate file for later model comparsion
     # csv format?

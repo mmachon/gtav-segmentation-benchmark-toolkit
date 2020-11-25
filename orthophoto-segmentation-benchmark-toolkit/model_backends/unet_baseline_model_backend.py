@@ -7,11 +7,12 @@ from .model_backend import ModelBackend
 
 class UnetBaselineModelBackend(ModelBackend):
 
-    def __init__(self, chip_size):
+    def __init__(self, backbone, chip_size):
+        self.backbone = backbone
         super().__init__(chip_size=chip_size)
 
     def compile(self):
-        model_backend = self.build_unet(size=self.chip_size, encoder="resnet18")
+        model_backend = self.build_unet(size=self.chip_size, encoder=self.backbone)
         model_backend.compile(
             optimizer=optimizers.Adam(lr=1e-4),
             loss='categorical_crossentropy',

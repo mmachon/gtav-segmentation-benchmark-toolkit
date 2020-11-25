@@ -54,4 +54,9 @@ class ChipSetScoring(Scoring):
         print(f"mIOU={mean_jaccard}")
         print(f"fw_mIOU={weighted_mean_jaccard}")
 
-        return precision, recall, jaccard, mean_jaccard, weighted_mean_jaccard
+        return {"precision": precision,
+                "recall": recall,
+                "iou": jaccard,
+                "m_iou:": mean_jaccard,
+                "fwm_iou": weighted_mean_jaccard
+                }
