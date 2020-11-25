@@ -14,7 +14,7 @@ class UnetBackend(ModelBackend):
         self.backbone = backbone
 
     def compile(self):
-        model_backend = Unet(self.backbone, input_shape=(self.chip_size, self.chip_size, 3), classes=6)
+        model_backend = Unet(self.backbone, input_shape=(self.chip_size, self.chip_size, 3), classes=6, activation="softmax")
         model_backend.compile(
             optimizer=optimizers.Adam(lr=1e-4),
             loss='categorical_crossentropy',
