@@ -15,7 +15,7 @@ class PSPnetBackend(ModelBackend):
 
     def compile(self):
         super().compile()
-        model_backend = PSPNet(self.backbone, input_shape=(self.chip_size, self.chip_size, 3), classes=6)
+        model_backend = PSPNet(self.backbone, input_shape=(self.chip_size, self.chip_size, 3), classes=6, activation="sigmoid")
         model_backend.compile(
             optimizer=optimizers.Adam(lr=1e-4),
             loss='categorical_crossentropy',
