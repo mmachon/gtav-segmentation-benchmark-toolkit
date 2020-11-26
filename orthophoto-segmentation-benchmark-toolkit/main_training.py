@@ -1,5 +1,4 @@
 import argparse
-
 from experiment import Experiment
 from datasets import DroneDeployDataset
 from util import *
@@ -7,6 +6,7 @@ from model_backends import UnetBackend, PSPnetBackend, FPNBackend, Deeplabv3plus
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
+    parser.add_argument("-i", "--init", help="init dataset", action="store_true")
     parser.add_argument("-t", "--train", help="train model", action="store_true")
     parser.add_argument("-b", "--benchmark", help="run inference", action="store_true")
     parser.add_argument("-s", "--score", help="score model", action="store_true")
@@ -27,7 +27,10 @@ if __name__ == '__main__':
 
     enable_dynamic_memory_growth()
 
-    dataset = DroneDeployDataset(config["dataset_id"], config["chip_size"]).download().generate_chips()
+    if args.init:
+        dataset = DroneDeployDataset(config["dataset_id"], config["chip_size"]).download().generate_chips()
+    else:
+        dataset = DroneDeployDataset(config["dataset_id"], config["chip_size"])
     model_backend = config["model_backend"](config["model_backbone"], config["chip_size"])
     experiment = Experiment(config["experiment_title"], dataset, model_backend, batch_size=config["batch_size"],
                             experiment_directory=config["load_experiment"], load_best=config["load_best_model"])
