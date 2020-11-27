@@ -2,7 +2,7 @@ import argparse
 from experiment import Experiment
 from datasets import DroneDeployDataset
 from util import *
-from model_backends import UnetBackend, PSPnetBackend, FPNBackend, Deeplabv3plusBackend, UnetBaselineModelBackend
+from model_backends import UnetBackend, PSPnetBackend, FPNBackend, Deeplabv3plusBackend, UnetBaselineModelBackend, FCN8Backend
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -14,13 +14,13 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     config = {
-        "experiment_title": "dd_unet_resnet18-2020-11-22_02-46-54",
+        "experiment_title": "test",
         "dataset_id": "dataset-medium",
         "chip_size": 384,
-        "batch_size": 16,
+        "batch_size": 8,
         "epochs": 40,
         "model_backbone": "mobilenetv3",
-        "model_backend": PSPnetBackend,
+        "model_backend": FCN8Backend,
         "load_experiment": "",
         "load_best_model": True,
     }
