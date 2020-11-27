@@ -9,7 +9,6 @@ from metrics import CustomMeanIOU
 class ModelBackend(ABC):
 
     def __init__(self, chip_size):
-        self.available_backbones = ["resnet50", "efficientnetb3", "mobilenetv3", "mobilenetv3small", "efficientnetb0"]
         self.chip_size = chip_size
         self.metrics = [
                 metrics.Precision(top_k=1, name='precision'),

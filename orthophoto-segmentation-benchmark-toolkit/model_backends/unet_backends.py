@@ -8,9 +8,6 @@ class UnetBackend(ModelBackend):
 
     def __init__(self, backbone, chip_size=320):
         super().__init__(chip_size)
-        if backbone not in self.available_backbones:
-            print("Backbone not found")
-            raise ValueError
         self.backbone = backbone
 
     def compile(self):
