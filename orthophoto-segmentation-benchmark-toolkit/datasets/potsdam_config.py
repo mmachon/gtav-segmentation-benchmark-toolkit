@@ -8,7 +8,7 @@ LABELMAP = {
     3 : (255,  255,  0),
     4 : (0,  255, 0),
     5 : (255, 255, 255),
-    6 : (0, 255,   255),
+    6 : (0, 255, 255),
 }
 
 # Color (BGR) to class
@@ -16,10 +16,10 @@ INV_LABELMAP = {
     (255,   0, 255) : 0,    # IGNORE
     (255,   0, 0) : 1,    # BUILDING
     (0,  0, 255) : 2,    # CLUTTER
-    (255,  255,  0) : 3,    # VEGETATION
+    (255, 255, 0) : 3,    # LOW VEGETATION
     (0,  255, 0) : 4,    # TREE
     (255, 255, 255) : 5,    # GROUND
-    (0, 255,   255) : 6,    # CAR
+    (0, 255, 255) : 6,    # CAR
 }
 
 LABELMAP_RGB = { k: (v[2], v[1], v[0]) for k, v in LABELMAP.items() }

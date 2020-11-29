@@ -21,3 +21,7 @@ class Scoring(ABC):
             return np.where(not (k1 & k2 & k3))
         else:
             return np.where(k1 & k2 & k3)
+
+    def wherecategory(self, img, category):
+        color = (category, category, category)
+        return self.wherecolor(img, color)

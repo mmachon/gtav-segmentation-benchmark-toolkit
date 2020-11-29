@@ -2,6 +2,7 @@ import os
 from multiprocessing import Pool
 import cv2
 import numpy as np
+from joblib import Parallel, delayed
 from sklearn.metrics import precision_score, recall_score, jaccard_score
 
 from .scoring import Scoring
@@ -17,10 +18,8 @@ class PotsdamScoring(Scoring):
 
     def score_image(self, test_file):
         print("Scoring started")
-        label_class = test_file[0]
-        pred_class = test_file[1]
-        label_class = label_class.reshape((label_class.shape[0] * label_class.shape[1]) * 3)
-        pred_class = pred_class.reshape((pred_class.shape[0] * pred_class.shape[1] * 3))
+        label_class = test_file[0].reshape((test_file[0].shape[0] * test_file[0].shape[1]) * 3)
+        pred_class = test_file[1].reshape((test_file[1].shape[0] * test_file[1].shape[1] * 3))
         precision = precision_score(label_class, pred_class, average='weighted')
         recall = recall_score(label_class, pred_class, average='weighted')
         jaccard = jaccard_score(label_class, pred_class, average=None)
@@ -46,13 +45,13 @@ class PotsdamScoring(Scoring):
             # COMBINED LABELS: [BUILDING, CLUTTER, VEGETATION, GROUND, CAR]
 
             for color, category in POTSDAM_INV_LABELMAP.items():
-                locs = self.wherecolor(test_file_prediction, color)
+                locs = self.wherecategory(test_file_label, category-1)
                 if category == 1:
                     test_file_label[locs] = 0
                 elif category == 2:
                     test_file_label[locs] = 1
                 elif category == 3:
-                    test_file_label[locs] = 2
+                    test_file_label[locs] = 3
                 elif category == 4:
                     test_file_label[locs] = 2
                 elif category == 5:
@@ -81,8 +80,9 @@ class PotsdamScoring(Scoring):
         jaccard = []
         mean_jaccard = []
         weighted_mean_jaccard = []
-        pool = Pool(processes=7)
-        results = [result for result in pool.map(self.score_image, test_file_list) if result]
+        results = Parallel(n_jobs=3)(
+            delayed(self.score_image)(test_file) for test_file in test_file_list
+        )
         print("Calculate stats")
         for result in results:
             precision.append(result[0])
@@ -108,10 +108,10 @@ class PotsdamScoring(Scoring):
             'clutter_jc_std': np.std(class_jaccard[1]),
             'vegetation_jc_mean': np.mean(class_jaccard[2]),
             'vegetation_jc_std': np.std(class_jaccard[2]),
-            'ground_jc_mean': np.mean(class_jaccard[4]),
-            'ground_jc_std': np.std(class_jaccard[4]),
-            'car_jc_mean': np.mean(class_jaccard[5]),
-            'car_jc_std': np.std(class_jaccard[5]),
+            'ground_jc_mean': np.mean(class_jaccard[3]),
+            'ground_jc_std': np.std(class_jaccard[3]),
+            'car_jc_mean': np.mean(class_jaccard[4]),
+            'car_jc_std': np.std(class_jaccard[4]),
         }
 
         score_dict = {
@@ -126,18 +126,3 @@ class PotsdamScoring(Scoring):
         print(score_dict)
 
         return score_dict
-
-    def color2class(self, img):
-        ret = np.zeros((img.shape[0], img.shape[1]), dtype='uint8')
-        ret = np.dstack([ret, ret, ret])
-        colors = np.unique(img.reshape(-1, img.shape[2]), axis=0)
-        # Skip any chips that would contain magenta (IGNORE) pixels
-        seen_colors = set([tuple(color) for color in colors])
-        IGNORE_COLOR = POTSDAM_LABELMAP[0]
-        if IGNORE_COLOR in seen_colors:
-            return None, None
-
-        for color in colors:
-            locs = np.where((img[:, :, 0] == color[0]) & (img[:, :, 1] == color[1]) & (img[:, :, 2] == color[2]))
-            ret[locs[0], locs[1], :] = POTSDAM_INV_LABELMAP[tuple(color)] - 1
-        return ret
