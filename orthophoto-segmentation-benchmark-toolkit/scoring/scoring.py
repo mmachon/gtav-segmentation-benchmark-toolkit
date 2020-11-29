@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 
+
 class Scoring(ABC):
 
     def __init__(self, basedir):

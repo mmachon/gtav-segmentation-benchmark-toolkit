@@ -33,7 +33,7 @@ def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=Tru
     return inference_timings
 
 
-def generate_predict_image(basedir, input_file, output, model, chip_size):
+def generate_predict_image(basedir, input_file, output, model, chip_size, save_prediction=True, save_overlay=False):
     output_file = os.path.join(basedir, f'predictions/{output}-prediction.png')
     size = chip_size
     with Image.open(input_file).convert('RGB') as img:
@@ -58,9 +58,13 @@ def generate_predict_image(basedir, input_file, output, model, chip_size):
 
         mask = category2mask(prediction)
         mask_img = Image.fromarray(mask)
-        mask_img.save(output_file)
-        prediction_overlay_image = Image.blend(img, mask_img, alpha=0.5)
-        prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
+        if save_prediction:
+            mask_img.save(output_file)
+            if save_overlay:
+                prediction_overlay_image = Image.blend(img, mask_img, alpha=0.5)
+                prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
+        else:
+            return mask
         # generate_prediction_chips(np.array(prediction_overlay_image), chip_size, basedir, output)
 
 

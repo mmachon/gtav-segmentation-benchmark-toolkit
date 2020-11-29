@@ -94,7 +94,18 @@ class Experiment:
 
     def score(self):
         scores = self.scoring_backend.score_predictions(self.dataset.dataset_name)
-        with open(f"{self.basedir}/scores.json") as score_json:
+        with open(f"{self.basedir}/scores.json", 'w') as score_json:
+            json.dump(scores, score_json)
+
+    def score_generalization(self):
+        potsdam_images = os.listdir("./dataset-potsdam/2_Ortho_RGB")
+        if not os.path.isdir(f"{self.basedir}/predictions/potsdam"):
+            os.makedirs(f"{self.basedir}/predictions/potsdam")
+            for image in potsdam_images:
+                generate_predict_image(self.basedir, f"./dataset-potsdam/2_Ortho_RGB/{image}", f"potsdam/{image[:-4]}", self.model_backend, self.dataset.chip_size)
+        self.scoring_backend = PotsdamScoring(self.basedir)
+        scores = self.scoring_backend.score_predictions("dataset-potsdam")
+        with open(f"{self.basedir}/potsdam_scores.json", 'w') as score_json:
             json.dump(scores, score_json)
 
     def benchmark_inference(self):

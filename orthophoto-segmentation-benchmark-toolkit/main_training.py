@@ -2,7 +2,7 @@ import argparse
 from experiment import Experiment
 from datasets import DroneDeployDataset
 from util import *
-from model_backends import UnetBackend, PSPnetBackend, FPNBackend, Deeplabv3plusBackend, UnetBaselineModelBackend, FCN8Backend
+from model_backends import UnetBackend, PSPnetBackend, FPNBackend, Deeplabv3plusBackend, UnetBaselineModelBackend, FCN8Backend, BisegnetBackend
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -10,7 +10,8 @@ if __name__ == '__main__':
     parser.add_argument("-t", "--train", help="train model", action="store_true")
     parser.add_argument("-b", "--benchmark", help="run inference", action="store_true")
     parser.add_argument("-s", "--score", help="score model", action="store_true")
-    parser.add_argument("-p", "--predict", help="score model", action="store_true")
+    parser.add_argument("-sg", "--score_generalisation", help="score model generalisation", action="store_true")
+    parser.add_argument("-p", "--predict", help="predict image", action="store_true")
     args = parser.parse_args()
 
     config = {
@@ -19,8 +20,8 @@ if __name__ == '__main__':
         "chip_size": 384,
         "batch_size": 8,
         "epochs": 40,
-        "model_backbone": "mobilenetv3",
-        "model_backend": FCN8Backend,
+        "model_backbone": "xception",
+        "model_backend": BisegnetBackend,
         "load_experiment": "",
         "load_best_model": True,
     }
@@ -51,6 +52,9 @@ if __name__ == '__main__':
     if args.score:
         experiment.score()
         exit()
+
+    if args.score_generalisation:
+        experiment.score_generalization()
 
     if args.predict:
         # TODO
