@@ -9,6 +9,7 @@ from tensorflow.keras.callbacks import History
 from model_analyzer import ModelAnalyzer
 from scoring import *
 from inference.predict_image import *
+from postprocessing import smooth_tiled_prediction
 
 from datasets.dd_dataset_config import test_ids
 
@@ -80,8 +81,11 @@ class Experiment:
         with open(f"{self.basedir}/train_history.json", 'w') as outfile:
             json.dump(history.history, outfile)
 
-    def predict(self, imagefile, output):
-        generate_predict_image(self.basedir, imagefile, output, self.model_backend, self.dataset.chip_size)
+    def predict(self, imagefile, output, postprocessing=False):
+        if postprocessing:
+            smooth_tiled_prediction(self.model_backend, self.dataset.chip_size, 6, imagefile, output)
+        else:
+            generate_predict_image(self.basedir, imagefile, output, self.model_backend, self.dataset.chip_size)
 
     def generate_inference_test_files(self):
         clear_session()
