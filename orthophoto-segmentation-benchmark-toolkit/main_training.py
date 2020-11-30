@@ -2,7 +2,7 @@ import argparse
 from experiment import Experiment
 from datasets import DroneDeployDataset
 from util import *
-from model_backends import UnetBackend, PSPnetBackend, FPNBackend, Deeplabv3plusBackend, UnetBaselineModelBackend, FCN8Backend, BisegnetBackend
+from model_backends import *
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
