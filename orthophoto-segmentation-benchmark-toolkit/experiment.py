@@ -5,6 +5,7 @@ from tensorflow.keras.callbacks import TensorBoard, ModelCheckpoint
 from tensorflow.keras.backend import clear_session
 import matplotlib.pyplot as plt
 from tensorflow.keras.callbacks import History
+from tqdm import tqdm
 
 from model_analyzer import ModelAnalyzer
 from scoring import *
@@ -16,7 +17,8 @@ from datasets.dd_dataset_config import test_ids
 
 class Experiment:
 
-    def __init__(self, title, dataset, model_backend, batch_size, experiment_directory="", load_best=False, enable_tensorboard=False):
+    def __init__(self, title, dataset, model_backend, batch_size, experiment_directory="", load_best=False,
+                 enable_tensorboard=False):
         if experiment_directory == "":
             self.experiment_title = f"{title}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", self.experiment_title)
@@ -54,23 +56,23 @@ class Experiment:
         train_data, valid_data = self.dataset.load_dataset(self.batch_size)
         history = History()
         callbacks = [ModelCheckpoint(
-                                filepath=f"{self.basedir}/models/checkpoint",
-                                save_weights_only=True,
-                                monitor='val_mIOU',
-                                mode='max',
-                                save_best_only=True
-                    ),
-                    history,
-               ]
+            filepath=f"{self.basedir}/models/checkpoint",
+            save_weights_only=True,
+            monitor='val_mIOU',
+            mode='max',
+            save_best_only=True
+        ),
+            history,
+        ]
         if self.enable_tensorboards:
             callbacks.append(TensorBoard(
-                                log_dir=self.tensorboard_log,
-                                histogram_freq=1,
-                                write_images=True,
-                                update_freq='epoch',
-                                profile_batch='500,510',
-                                embeddings_freq=1,
-                    ))
+                log_dir=self.tensorboard_log,
+                histogram_freq=1,
+                write_images=True,
+                update_freq='epoch',
+                profile_batch='500,510',
+                embeddings_freq=1,
+            ))
         self.model_backend.fit(
             train_data,
             validation_data=valid_data,
@@ -101,13 +103,19 @@ class Experiment:
         with open(f"{self.basedir}/scores.json", 'w') as score_json:
             json.dump(scores, score_json)
 
-    def score_generalization(self):
-        potsdam_images = os.listdir("./dataset-potsdam/2_Ortho_RGB")
+    def score_generalization(self, gsd=10):
+        if gsd == 10:
+            path = "./dataset-potsdam/2_Ortho_RGB_gsd10"
+        else:
+            path = "./dataset-potsdam/2_Ortho_RGB"
+        potsdam_images = os.listdir(path)
         if not os.path.isdir(f"{self.basedir}/predictions/potsdam"):
             os.makedirs(f"{self.basedir}/predictions/potsdam")
-            for image in potsdam_images:
-                generate_predict_image(self.basedir, f"./dataset-potsdam/2_Ortho_RGB/{image}", f"potsdam/{image[:-4]}", self.model_backend, self.dataset.chip_size)
-        self.scoring_backend = PotsdamScoring(self.basedir)
+            print("Creating Potsdam image predictions")
+            for image in tqdm(potsdam_images):
+                generate_predict_image(self.basedir, f"{path}/{image}", f"potsdam/{image[:-4]}",
+                                       self.model_backend, self.dataset.chip_size)
+        self.scoring_backend = PotsdamScoring(self.basedir, gsd)
         scores = self.scoring_backend.score_predictions("dataset-potsdam")
         with open(f"{self.basedir}/potsdam_scores.json", 'w') as score_json:
             json.dump(scores, score_json)
@@ -127,7 +135,7 @@ class Experiment:
     # Generate an easy to evaluate file for later model comparsion
     # csv format?
     def generate_summary(self):
-        pass # TODO
+        pass  # TODO
 
     def plot_segm_history(self, history, metrics=["mIOU", "val_mIOU"], losses=["loss", "val_loss"]):
         """[summary]
