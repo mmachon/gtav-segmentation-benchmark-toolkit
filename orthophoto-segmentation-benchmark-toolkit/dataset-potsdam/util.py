@@ -4,6 +4,7 @@ from datasets.potsdam_config import LABELMAP as POTSDAM_LABELMAP
 import numpy as np
 import os
 import cv2
+from tqdm import tqdm
 
 def color2class(img):
     ret = np.zeros((img.shape[0], img.shape[1]), dtype='uint8')
@@ -34,4 +35,13 @@ def to_class():
         cv2.imwrite("./2_Ortho_class/" + test_file_id, color2class(test_file_label))
 
 
-to_class()
+def resize(dir):
+    files = os.listdir(f"./{dir}")
+    for img_file in tqdm(files):
+        img = cv2.imread(f"./{dir}/{img_file}")
+        resized_img = cv2.resize(img, (3000, 3000), interpolation=cv2.INTER_NEAREST)
+        cv2.imwrite(f"./{dir}_gsd10/{img_file}", resized_img)
+
+
+
+resize("2_Ortho_RGB")

@@ -28,16 +28,17 @@ class ChipSetScoring(Scoring):
             for color, category in INV_LABELMAP.items():
                 locs = self.wherecolor(test_chip_prediction, color)
                 test_chip_prediction[locs] = category - 1
-            test_chip_labels.append(test_chip_label)
-            test_chips_predictions.append(test_chip_prediction)
+            # TODO SCORE LABELS
+            test_chip_labels.append(np.amax(test_chip_label, axis=-1))
+            test_chips_predictions.append(np.amax(test_chip_prediction, axis=-1))
 
         print("Concatenating chips")
         test_chip_label_concat = cv2.hconcat(np.array(test_chip_labels))
         test_chip_prediction_concat = cv2.hconcat(np.array(test_chips_predictions))
 
         shape = test_chip_label_concat.shape
-        test_chip_label_concat = test_chip_label_concat.reshape(shape[0]*shape[1]*shape[2])
-        test_chip_prediction_concat = test_chip_prediction_concat.reshape(shape[0] * shape[1] * shape[2])
+        test_chip_label_concat = test_chip_label_concat.reshape(shape[0] * shape[1])
+        test_chip_prediction_concat = test_chip_prediction_concat.reshape(shape[0] * shape[1])
 
         print("Calculating precision")
         precision = precision_score(test_chip_label_concat, test_chip_prediction_concat, average='weighted')
@@ -56,7 +57,7 @@ class ChipSetScoring(Scoring):
 
         return {"precision": precision,
                 "recall": recall,
-                "iou": jaccard,
+                "iou": jaccard.tolist(),
                 "m_iou:": mean_jaccard,
                 "fwm_iou": weighted_mean_jaccard
                 }

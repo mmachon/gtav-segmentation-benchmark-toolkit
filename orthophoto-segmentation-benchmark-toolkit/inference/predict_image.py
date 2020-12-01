@@ -12,6 +12,12 @@ def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=Tru
     inference_timings = []
     predictions = []
 
+    print("Warmup")
+    for i in range(50):
+        chip, chip_id = chip_files[0]
+        chip = np.expand_dims(np.array(chip), axis=0)
+        model.predict(chip)
+
     for chip, chip_id in chip_files:
         chip = np.expand_dims(np.array(chip), axis=0)
         start = timer()

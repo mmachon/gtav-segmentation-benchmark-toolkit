@@ -12,16 +12,17 @@ if __name__ == '__main__':
     parser.add_argument("-s", "--score", help="score model", action="store_true")
     parser.add_argument("-sg", "--score_generalisation", help="score model generalisation", action="store_true")
     parser.add_argument("-p", "--predict", help="predict image", action="store_true")
+    parser.add_argument("-e", "--export", help="export model", action="store_true")
     args = parser.parse_args()
 
     config = {
-        "experiment_title": "test",
+        "experiment_title": "testgen",
         "dataset_id": "dataset-medium",
         "chip_size": 384,
         "batch_size": 8,
         "epochs": 40,
-        "model_backbone": "xception",
-        "model_backend": BisegnetBackend,
+        "model_backbone": "efficientnetb0",
+        "model_backend": PSPnetBackend,
         "load_experiment": "",
         "load_best_model": True,
     }
@@ -57,5 +58,7 @@ if __name__ == '__main__':
         experiment.score_generalization()
 
     if args.predict:
-        # TODO
-        exit()
+        experiment.predict("./RGB100MP_2020-06-02_10-05-18cropsq.tif", "./testpp4.png", postprocessing=True)
+
+    if args.export:
+        experiment.export_model()

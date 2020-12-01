@@ -25,6 +25,7 @@ class Experiment:
             self.init_experiment_directory_structure()
             self.model_backend = model_backend.compile()
         else:
+            self.experiment_title = experiment_directory
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", experiment_directory)
             print(f"Loading experiment {experiment_directory}")
             if load_best:
@@ -89,15 +90,6 @@ class Experiment:
         else:
             generate_predict_image(self.basedir, imagefile, output, self.model_backend, self.dataset.chip_size)
 
-    def generate_inference_test_files(self):
-        clear_session()
-        for scene in test_ids:
-            imagefile = f'{self.dataset.dataset_name}/images/{scene}-ortho.tif'
-            if not os.path.exists(imagefile):
-                continue
-            print(f'running inference on image {imagefile}.')
-            generate_predict_image(self.basedir, imagefile, scene, self.model_backend, self.dataset.chip_size)
-
     def score(self):
         scores = self.scoring_backend.score_predictions(self.dataset.dataset_name)
         with open(f"{self.basedir}/scores.json", 'w') as score_json:
@@ -132,10 +124,8 @@ class Experiment:
                        "median": np.median(inference_timings),
                        "90_perc": np.percentile(inference_timings, 90)}, inference_json)
 
-    # Generate an easy to evaluate file for later model comparsion
-    # csv format?
-    def generate_summary(self):
-        pass  # TODO
+    def export_model(self):
+        self.model_backend.save(f"{self.basedir}/export/{self.experiment_title}")
 
     def plot_segm_history(self, history, metrics=["mIOU", "val_mIOU"], losses=["loss", "val_loss"]):
         """[summary]
