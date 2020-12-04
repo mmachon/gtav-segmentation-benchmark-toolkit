@@ -53,7 +53,9 @@ class BackbonesFactory(ModelsFactory):
         'mobilenetv2': ('block_13_expand_relu', 'block_6_expand_relu', 'block_3_expand_relu',
                         'block_1_expand_relu'),
         'mobilenetv3': ('activation_29', 'activation_15', 'activation_6', 'activation_2'),
+        'mobilenetv3_minimalistic': ('activation_24', 'activation_12', 'activation_6', 'activation_2'),
         'mobilenetv3small': ('activation_22', 'activation_7', 'activation_3', 'activation'),
+        'mobilenetv3small_minimalistic': ('activation_16', 'activation_6', 'activation_2', 'activation'),
 
         # EfficientNets
         'efficientnetb0': ('block6a_expand_activation', 'block4a_expand_activation',
@@ -90,6 +92,8 @@ class BackbonesFactory(ModelsFactory):
 
         'mobilenetv3': [mbnv3.MobileNetV3Large, mbnv3.preprocess_input],
         'mobilenetv3small': [mbnv3.MobileNetV3Small, mbnv3.preprocess_input],
+        'mobilenetv3_minimalistic': [mbnv3.MobileNetV3Large, mbnv3.preprocess_input],
+        'mobilenetv3small_minimalistic': [mbnv3.MobileNetV3Small, mbnv3.preprocess_input],
     }
 
     # currently not supported
