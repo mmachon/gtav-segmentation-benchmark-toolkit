@@ -5,6 +5,7 @@ from classification_models.models_factory import ModelsFactory
 from . import inception_resnet_v2 as irv2
 from . import inception_v3 as iv3
 from . import mobilenet_v3 as mbnv3
+from . import xception as xc
 
 
 class BackbonesFactory(ModelsFactory):
@@ -74,7 +75,7 @@ class BackbonesFactory(ModelsFactory):
                            'block3a_expand_activation', 'block2a_expand_activation'),
         'efficientnetb7': ('block6a_expand_activation', 'block4a_expand_activation',
                            'block3a_expand_activation', 'block2a_expand_activation'),
-
+        'xception': (32, 22, 12, 4)
     }
 
     _models_update = {
@@ -94,11 +95,12 @@ class BackbonesFactory(ModelsFactory):
         'mobilenetv3small': [mbnv3.MobileNetV3Small, mbnv3.preprocess_input],
         'mobilenetv3_minimalistic': [mbnv3.MobileNetV3Large, mbnv3.preprocess_input],
         'mobilenetv3small_minimalistic': [mbnv3.MobileNetV3Small, mbnv3.preprocess_input],
+        'xception': [xc.Xception, xc.preprocess_input],
     }
 
     # currently not supported
     _models_delete = ['resnet50v2', 'resnet101v2', 'resnet152v2',
-                      'nasnetlarge', 'nasnetmobile', 'xception']
+                      'nasnetlarge', 'nasnetmobile']
 
     @property
     def models(self):
