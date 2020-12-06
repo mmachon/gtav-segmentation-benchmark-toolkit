@@ -19,6 +19,7 @@ class PotsdamScoring(Scoring):
     def score_image(self, test_file):
         label_class = test_file[0].reshape((test_file[0].shape[0] * test_file[0].shape[1]) * 3)
         pred_class = test_file[1].reshape((test_file[1].shape[0] * test_file[1].shape[1] * 3))
+
         precision = precision_score(label_class, pred_class, average='weighted')
         recall = recall_score(label_class, pred_class, average='weighted')
         jaccard = jaccard_score(label_class, pred_class, average=None)
@@ -41,21 +42,22 @@ class PotsdamScoring(Scoring):
             test_file_prediction = np.array(cv2.imread(f"{self.basedir}/predictions/potsdam/{test_file_id[:-9]}RGB-prediction.png"))
 
             # COMBINED LABELS: [BUILDING, CLUTTER, VEGETATION, GROUND, CAR]
-
+            test_file_label_align = np.copy(test_file_label)
             for color, category in POTSDAM_INV_LABELMAP.items():
                 locs = self.wherecategory(test_file_label, category-1)
                 if category == 1:
-                    test_file_label[locs] = 0
+                    test_file_label_align[locs] = 0
                 elif category == 2:
-                    test_file_label[locs] = 1
+                    test_file_label_align[locs] = 1
                 elif category == 3:
-                    test_file_label[locs] = 3
+                    test_file_label_align[locs] = 3
                 elif category == 4:
-                    test_file_label[locs] = 2
+                    test_file_label_align[locs] = 2
                 elif category == 5:
-                    test_file_label[locs] = 3
+                    test_file_label_align[locs] = 3
                 elif category == 6:
-                    test_file_label[locs] = 4
+                    test_file_label_align[locs] = 4
+            test_file_label = test_file_label_align
             for color, category in DD_INV_LABELMAP.items():
                 locs = self.wherecolor(test_file_prediction, color)
                 if category == 1:
