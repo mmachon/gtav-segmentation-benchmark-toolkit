@@ -15,3 +15,4 @@ image-classifiers
 efficientnet
 scikit-image
 tqdm
+tf2onnx

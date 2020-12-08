@@ -19,11 +19,13 @@ class Experiment:
 
     def __init__(self, title, dataset, model_backend, batch_size, experiment_directory="", load_best=False,
                  enable_tensorboard=False):
+        # NEW EXPERIMENT
         if experiment_directory == "":
             self.experiment_title = f"{title}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", self.experiment_title)
             self.init_experiment_directory_structure()
             self.model_backend = model_backend.compile()
+        # LOAD EXPERIMENT
         else:
             self.experiment_title = experiment_directory
             self.basedir = os.path.join(f"{os.getcwd()}/experiments", experiment_directory)
@@ -45,6 +47,7 @@ class Experiment:
         os.makedirs(f"{self.basedir}/predictions")
         os.makedirs(f"{self.basedir}/predictions/chips")
         os.makedirs(f"{self.basedir}/export")
+        os.makedirs("./onnx_export")
 
     def save_config(self):
         pass
@@ -126,6 +129,7 @@ class Experiment:
 
     def export_model(self):
         self.model_backend.save(f"{self.basedir}/export/{self.experiment_title}")
+        os.system(f"python -m tf2onnx.convert --saved-model {self.basedir}/export/{self.experiment_title} --opset 12 --output ./onnx_export/{self.experiment_title}")
 
     def plot_segm_history(self, history, metrics=["mIOU", "val_mIOU"], losses=["loss", "val_loss"]):
         """[summary]
