@@ -72,9 +72,12 @@ def ContextPath(layer_13, layer_14, backbone="xception"):
     elif backbone == "resnet18":
         block1 = AttentionRefinmentModule(layer_13, n_filters=512)
         block2 = AttentionRefinmentModule(layer_14, n_filters=512)
-    else:
+    elif backbone == "xception":
         block1 = AttentionRefinmentModule(layer_13, n_filters=1024)
         block2 = AttentionRefinmentModule(layer_14, n_filters=2048)
+    elif backbone == "efficientnetb3":
+        block1 = AttentionRefinmentModule(layer_13, n_filters=384)
+        block2 = AttentionRefinmentModule(layer_14, n_filters=1536)
 
     global_channels = globalmax(block2)
     block2_scaled = multiply([global_channels, block2])
@@ -108,8 +111,7 @@ def get_model(backbone_name="xception"):
         x = Lambda(lambda image: preprocess_input(image))(inputs)
         tail = backbone.output
         output = FinalModel(x, tail_prev, tail, backbone_name)
-    else:
-        # FIXME
+    elif backbone_name == "resnet18" or backbone_name == "resnet50":
         if backbone_name == "resnet18":
             ResNet18, _ = Classifiers.get('resnet18')
             backbone = ResNet18(
@@ -119,13 +121,20 @@ def get_model(backbone_name="xception"):
                 classes=6
             )
             tail_prev = backbone.get_layer('stage4_unit2_relu2').output
-        else:
+        elif backbone_name == "resnet50":
             backbone = ResNet50(weights='imagenet', input_shape=(384, 384, 3), include_top=False, classes=6)
             tail_prev = backbone.get_layer('conv5_block3_2_relu').output
         inputs = backbone.input
         x = Lambda(lambda image: preprocess_input(image))(inputs)
         tail = backbone.output
         output = FinalModel(x, tail_prev, tail, backbone_name)
+    if backbone_name == "efficientnetb3":
+       backbone = EfficientNetB3(weights='imagenet', input_shape=(384, 384, 3), include_top=False, classes=6)
+       tail_prev = backbone.get_layer('block7b_project_conv').output
+       inputs = backbone.input
+       x = Lambda(lambda image: preprocess_input(image))(inputs)
+       tail = backbone.output
+       output = FinalModel(x, tail_prev, tail, backbone_name)
 
 
     x = Conv2D(
