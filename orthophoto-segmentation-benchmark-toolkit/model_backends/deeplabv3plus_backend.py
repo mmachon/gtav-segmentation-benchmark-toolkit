@@ -11,7 +11,7 @@ class Deeplabv3plusBackend(ModelBackend):
         self.backbone = backbone
 
     def compile(self):
-        model_backend = Deeplabv3("cityscapes", input_shape=(self.chip_size, self.chip_size, 3), classes=6, backbone=self.backbone, OS=8)
+        model_backend = Deeplabv3("cityscapes", input_shape=(self.chip_size, self.chip_size, 3), classes=6, backbone=self.backbone, OS=16)
         model_backend.compile(
             optimizer=optimizers.Adam(lr=1e-4),
             loss='categorical_crossentropy',

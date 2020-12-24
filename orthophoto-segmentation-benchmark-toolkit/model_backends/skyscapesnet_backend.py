@@ -117,7 +117,7 @@ class SkyScapesNetBackend(ModelBackend):
         model_backend.summary()
         return model_backend
 
-    def build_skyscapesnet(self, filter=64, dropout=0.2, classes=6):
+    def build_skyscapesnet(self, filter=48, dropout=0.5, classes=6):
         input = Input((self.chip_size, self.chip_size, 3))
 
         maxpool = MaxPool2D()(input)

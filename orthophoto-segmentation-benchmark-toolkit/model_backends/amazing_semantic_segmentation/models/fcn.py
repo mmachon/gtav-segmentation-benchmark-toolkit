@@ -45,55 +45,6 @@ class FCN(Network):
         x = layers.ReLU()(x)
         return x
 
-    def _fcn_32s(self, inputs):
-        num_classes = self.num_classes
-
-        x = self.encoder(inputs)
-        x = self._conv_relu(x, 4096, 7)
-        x = layers.Dropout(rate=0.5)(x)
-        x = self._conv_relu(x, 4096, 1)
-        x = layers.Dropout(rate=0.5)(x)
-
-        x = layers.Conv2D(num_classes, 1, kernel_initializer='he_normal')(x)
-        x = layers.Conv2DTranspose(num_classes, 64, strides=32, padding='same', kernel_initializer='he_normal')(x)
-
-        outputs = x
-        return models.Model(inputs, outputs, name=self.version)
-
-    def _fcn_16s(self, inputs):
-        num_classes = self.num_classes
-
-        if self.base_model in ['DenseNet121',
-                               'DenseNet169',
-                               'DenseNet201',
-                               'DenseNet264',
-                               'Xception',
-                               'Xception-DeepLab']:
-            c4, c5 = self.encoder(inputs, output_stages=['c3', 'c5'])
-        else:
-            c4, c5 = self.encoder(inputs, output_stages=['c4', 'c5'])
-
-        x = self._conv_relu(c5, 4096, 7)
-        x = layers.Dropout(rate=0.5)(x)
-        x = self._conv_relu(x, 4096, 1)
-        x = layers.Dropout(rate=0.5)(x)
-
-        x = layers.Conv2D(num_classes, 1, kernel_initializer='he_normal')(x)
-        x = layers.Conv2DTranspose(num_classes, 4,
-                                   strides=2,
-                                   padding='same',
-                                   kernel_initializer='he_normal')(x)
-        c4 = layers.Conv2D(num_classes, 1, kernel_initializer='he_normal')(c4)
-        x = layers.Add()([x, c4])
-
-        x = layers.Conv2DTranspose(num_classes, 32,
-                                   strides=16,
-                                   padding='same',
-                                   kernel_initializer='he_normal')(x)
-
-        outputs = x
-        return models.Model(inputs, outputs, name=self.version)
-
     def _fcn_8s(self, inputs):
         num_classes = self.num_classes
 

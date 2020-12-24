@@ -63,21 +63,11 @@ def FeatureFusionModule(input_f, input_s, n_filters):
     return Add()([branch0, x])
 
 
-def ContextPath(layer_13, layer_14, backbone="xception"):
+def ContextPath(prev_layer, last_layer):
     globalmax = GlobalAveragePooling2D()
 
-    if backbone == "resnet50":
-        block1 = AttentionRefinmentModule(layer_13, n_filters=512)
-        block2 = AttentionRefinmentModule(layer_14, n_filters=2048)
-    elif backbone == "resnet18":
-        block1 = AttentionRefinmentModule(layer_13, n_filters=512)
-        block2 = AttentionRefinmentModule(layer_14, n_filters=512)
-    elif backbone == "xception":
-        block1 = AttentionRefinmentModule(layer_13, n_filters=1024)
-        block2 = AttentionRefinmentModule(layer_14, n_filters=2048)
-    elif backbone == "efficientnetb3":
-        block1 = AttentionRefinmentModule(layer_13, n_filters=384)
-        block2 = AttentionRefinmentModule(layer_14, n_filters=1536)
+    block1 = AttentionRefinmentModule(prev_layer, n_filters=prev_layer.shape[3])
+    block2 = AttentionRefinmentModule(last_layer, n_filters=last_layer.shape[3])
 
     global_channels = globalmax(block2)
     block2_scaled = multiply([global_channels, block2])
@@ -90,13 +80,13 @@ def ContextPath(layer_13, layer_14, backbone="xception"):
     return cnc
 
 
-def FinalModel(x, layer_13, layer_14, backbone):
+def FinalModel(x, layer_13, layer_14):
     x = ConvAndBatch(x, 32, strides=2)
     x = ConvAndBatch(x, 64, strides=2)
     x = ConvAndBatch(x, 156, strides=2)
 
     # context path
-    cp = ContextPath(layer_13, layer_14, backbone)
+    cp = ContextPath(layer_13, layer_14)
     fusion = FeatureFusionModule(cp, x, 32)
     ans = UpSampling2D(size=(8, 8), interpolation='bilinear')(fusion)
 
@@ -107,34 +97,28 @@ def get_model(backbone_name="xception"):
     if backbone_name == "xception":
         backbone = Xception(weights='imagenet', input_shape=(384, 384, 3), include_top=False, classes=6)
         tail_prev = backbone.get_layer('block13_pool').output
-        inputs = backbone.input
-        x = Lambda(lambda image: preprocess_input(image))(inputs)
-        tail = backbone.output
-        output = FinalModel(x, tail_prev, tail, backbone_name)
-    elif backbone_name == "resnet18" or backbone_name == "resnet50":
-        if backbone_name == "resnet18":
-            ResNet18, _ = Classifiers.get('resnet18')
-            backbone = ResNet18(
-                weights='imagenet',
-                input_tensor=Input((384, 384, 3)),
-                include_top=False,
-                classes=6
-            )
-            tail_prev = backbone.get_layer('stage4_unit2_relu2').output
-        elif backbone_name == "resnet50":
-            backbone = ResNet50(weights='imagenet', input_shape=(384, 384, 3), include_top=False, classes=6)
-            tail_prev = backbone.get_layer('conv5_block3_2_relu').output
-        inputs = backbone.input
-        x = Lambda(lambda image: preprocess_input(image))(inputs)
-        tail = backbone.output
-        output = FinalModel(x, tail_prev, tail, backbone_name)
+    if backbone_name == "resnet18":
+        ResNet18, _ = Classifiers.get('resnet18')
+        backbone = ResNet18(
+            weights='imagenet',
+            input_tensor=Input((384, 384, 3)),
+            include_top=False,
+            classes=6
+        )
+        tail_prev = backbone.get_layer('stage4_unit2_relu2').output
+    if backbone_name == "resnet50":
+        backbone = ResNet50(weights='imagenet', input_shape=(384, 384, 3), include_top=False, classes=6)
+        tail_prev = backbone.get_layer('conv5_block3_2_relu').output
     if backbone_name == "efficientnetb3":
        backbone = EfficientNetB3(weights='imagenet', input_shape=(384, 384, 3), include_top=False, classes=6)
        tail_prev = backbone.get_layer('block7b_project_conv').output
-       inputs = backbone.input
-       x = Lambda(lambda image: preprocess_input(image))(inputs)
-       tail = backbone.output
-       output = FinalModel(x, tail_prev, tail, backbone_name)
+    if backbone_name == "efficientnetb4":
+        backbone = EfficientNetB4(weights='imagenet', input_shape=(384, 384, 3), include_top=False, classes=6)
+        tail_prev = backbone.get_layer('block7b_project_conv').output
+    inputs = backbone.input
+    x = Lambda(lambda image: preprocess_input(image))(inputs)
+    tail = backbone.output
+    output = FinalModel(x, tail_prev, tail)
 
 
     x = Conv2D(

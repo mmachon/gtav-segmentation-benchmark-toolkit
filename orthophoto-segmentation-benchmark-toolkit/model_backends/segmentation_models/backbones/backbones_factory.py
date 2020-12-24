@@ -75,6 +75,8 @@ class BackbonesFactory(ModelsFactory):
                            'block3a_expand_activation', 'block2a_expand_activation'),
         'efficientnetb7': ('block6a_expand_activation', 'block4a_expand_activation',
                            'block3a_expand_activation', 'block2a_expand_activation'),
+
+        # Xception
         'xception': (32, 22, 12, 4)
     }
 

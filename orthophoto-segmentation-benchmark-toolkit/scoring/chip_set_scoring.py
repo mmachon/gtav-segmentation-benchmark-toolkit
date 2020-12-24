@@ -40,6 +40,8 @@ class ChipSetScoring(Scoring):
         test_chip_label_concat = test_chip_label_concat.reshape(shape[0] * shape[1])
         test_chip_prediction_concat = test_chip_prediction_concat.reshape(shape[0] * shape[1])
 
+        print(jaccard_score(test_chip_label_concat, test_chip_prediction_concat, average='macro'))
+
         print("Calculating precision")
         precision = precision_score(test_chip_label_concat, test_chip_prediction_concat, average='weighted')
         print("Calculating recall")

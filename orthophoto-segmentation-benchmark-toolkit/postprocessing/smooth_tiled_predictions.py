@@ -163,24 +163,19 @@ def _windowed_subdivs(padded_img, window_size, subdivisions, nb_classes, pred_fu
     Note:
         patches_resolution_along_X == patches_resolution_along_Y == window_size
     """
-    WINDOW_SPLINE_2D = _window_2D(window_size=window_size, power=2)
 
     step = int(window_size/subdivisions)
     padx_len = padded_img.shape[0]
     pady_len = padded_img.shape[1]
-    subdivs = []
+    subdivs = np.zeros(24 * 24 * 384 * 384 * 3).reshape(24,24,384,384,3)
 
     for i in range(0, padx_len-window_size+1, step):
-        subdivs.append([])
         for j in range(0, padx_len-window_size+1, step):
             patch = padded_img[i:i+window_size, j:j+window_size, :]
-            subdivs[-1].append(patch)
+            subdivs[int(i/step) if i != 0 else 0][(int(j/step) if j != 0 else 0)] = patch
 
     # Here, `gc.collect()` clears RAM between operations.
     # It should run faster if they are removed, if enough memory is available.
-    gc.collect()
-    subdivs = np.array(subdivs)
-    gc.collect()
     a, b, c, d, e = subdivs.shape
     subdivs_list = subdivs.reshape(a * b, c, d, e)
     gc.collect()
@@ -358,11 +353,11 @@ def smooth_tiled_prediction(model, window_size, nb_classes, input_img, output):
     predictions_smooth = predict_img_with_smooth_windowing(
         input_img,
         window_size=window_size,
-        subdivisions=4,  # Minimal amount of overlap for windowing. Must be an even number.
+        subdivisions=2,  # Minimal amount of overlap for windowing. Must be an even number.
         nb_classes=nb_classes,
         pred_func=model.predict
     )
     predictions_smooth = np.argmax(predictions_smooth, axis=-1) + 1
-    mask = category2mask(predictions_smooth)
-    mask_img = Image.fromarray(mask)
-    mask_img.save(output)
+    predictions_smooth = category2mask(predictions_smooth)
+    predictions_smooth = Image.fromarray(predictions_smooth)
+    predictions_smooth.save(output)

@@ -13,7 +13,7 @@ from tensorflow.python.saved_model import tag_constants, signature_constants
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 import json
 from sklearn.metrics import precision_score, recall_score, jaccard_score
-enable_dynamic_memory_growth()
+limit_memory(6000)
 
 
 # TODO -> OOD

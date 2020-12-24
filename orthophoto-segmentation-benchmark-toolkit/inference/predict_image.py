@@ -3,7 +3,8 @@ from PIL import Image
 from util import *
 import cv2
 from timeit import default_timer as timer
-
+import onnxruntime as rt
+from tqdm import tqdm
 
 def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=True):
     # LOAD CHIPS IN MEMORY
@@ -12,16 +13,22 @@ def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=Tru
     inference_timings = []
     predictions = []
 
+    sess = rt.InferenceSession(f"./unet_mobilev3op10.onnx", providers=["CUDAExecutionProvider"])
+    input_name = sess.get_inputs()[0].name
+    label_name = sess.get_outputs()[0].name
+
     print("Warmup")
-    for i in range(50):
+    for i in tqdm(range(50)):
         chip, chip_id = chip_files[0]
         chip = np.expand_dims(np.array(chip), axis=0)
-        model.predict(chip)
+        chip = chip.astype(np.float32)
+        sess.run([label_name], {input_name: chip})[0]
 
-    for chip, chip_id in chip_files:
+    for chip, chip_id in tqdm(chip_files):
         chip = np.expand_dims(np.array(chip), axis=0)
+        chip = chip.astype(np.float32)
         start = timer()
-        predicted_chip = model.predict(chip)
+        predicted_chip = sess.run([label_name], {input_name: chip})[0]
         end = timer()
         inference_timings.append(end - start)
         predictions.append((np.squeeze(predicted_chip), chip_id))
@@ -65,7 +72,7 @@ def generate_predict_image(basedir, input_file, output, model, chip_size, save_p
         mask = category2mask(prediction)
         mask_img = Image.fromarray(mask)
         if save_prediction:
-            mask_img.save(output_file)
+            # mask_img.save(output_file)
             if save_overlay:
                 prediction_overlay_image = Image.blend(img, mask_img, alpha=0.5)
                 prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
@@ -73,6 +80,18 @@ def generate_predict_image(basedir, input_file, output, model, chip_size, save_p
             return mask
         # generate_prediction_chips(np.array(prediction_overlay_image), chip_size, basedir, output)
 
+
+def generate_full_predict_image(basedir, input_file, output, model):
+    chip_size = 1152
+    output_file = os.path.join(basedir, f'predictions/{output}-prediction.png')
+    with Image.open(input_file).convert('RGB') as img:
+        nimg = np.array(Image.open(input_file).convert('RGB'))
+        predicted_chip = np.array(model.predict(np.expand_dims(nimg, axis=0)))
+        predicted_chip = np.squeeze(predicted_chip)
+        mask = category2mask(np.argmax(predicted_chip, axis=-1) + 1)
+        mask_img = Image.fromarray(mask)
+        prediction_overlay_image = Image.blend(img, mask_img, alpha=0.5)
+        prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
 
 def generate_prediction_chips(prediction_overlay_image, chip_size, basedir, scene):
     if not os.path.isdir(f"{basedir}/predictions/chips"):

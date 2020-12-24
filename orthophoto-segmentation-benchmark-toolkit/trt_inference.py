@@ -7,7 +7,7 @@ from util import *
 from tensorflow.python.saved_model import tag_constants, signature_constants
 from tensorflow.python.framework.convert_to_constants import convert_variables_to_constants_v2
 import json
-limit_memory(2000)
+limit_memory(500)
 
 
 class TensorRTBenchmark:
@@ -51,6 +51,6 @@ class TensorRTBenchmark:
 
 
 tensorrt_benchmark = TensorRTBenchmark()
-model_list = ["TFTRT_FP32_psp_efficientnetb4-2020-11-29_00-33-32-saved_model"]
+model_list = ["TFTRT_FP16_psp_efficientnetb4-2020-11-29_00-33-32-saved_model"]
 for model in model_list:
     tensorrt_benchmark.benchmark_tensorrt_inference(model)
