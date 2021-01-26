@@ -128,9 +128,6 @@ class Experiment:
 
     def export_model(self):
         self.model_backend.save(f"{self.basedir}/export/{self.experiment_title}")
-        import keras2onnx
-        onnx_model = keras2onnx.convert_keras(self.model_backend, target_opset=13)
-        keras2onnx.save_model(onnx_model, "mobilenetkerasonnx")
         os.system(f"python -m tf2onnx.convert --saved-model {self.basedir}/export/{self.experiment_title} --opset 12 --output ./onnx_export/{self.experiment_title}")
 
     def plot_segm_history(self, history, metrics=["mIOU", "val_mIOU"], losses=["loss", "val_loss"]):

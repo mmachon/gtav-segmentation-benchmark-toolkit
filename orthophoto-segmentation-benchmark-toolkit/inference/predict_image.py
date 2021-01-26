@@ -13,7 +13,7 @@ def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=Tru
     inference_timings = []
     predictions = []
 
-    sess = rt.InferenceSession(f"./unet_mobilev3op10.onnx", providers=["CUDAExecutionProvider"])
+    sess = rt.InferenceSession(f"./fpn_efficientnetb1", providers=["CUDAExecutionProvider"])
     input_name = sess.get_inputs()[0].name
     label_name = sess.get_outputs()[0].name
 
@@ -46,7 +46,7 @@ def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=Tru
     return inference_timings
 
 
-def generate_predict_image(basedir, input_file, output, model, chip_size, save_prediction=True, save_overlay=False):
+def generate_predict_image(basedir, input_file, output, model, chip_size, save_prediction=True, save_overlay=True):
     output_file = os.path.join(basedir, f'predictions/{output}-prediction.png')
     size = chip_size
     with Image.open(input_file).convert('RGB') as img:
@@ -79,6 +79,52 @@ def generate_predict_image(basedir, input_file, output, model, chip_size, save_p
         else:
             return mask
         # generate_prediction_chips(np.array(prediction_overlay_image), chip_size, basedir, output)
+
+
+def batch_predict(model):
+    images = os.listdir("/mnt/h/edm_big_overlap_50p")
+    for image in tqdm(images):
+        output_file = f"prediction_openrealm_transparency2/{image[:-4]}-predict"
+        image = f"/mnt/h/edm_big_overlap_50p/{image}"
+
+        size = 960
+        with Image.open(image).convert('RGB') as img:
+            img = img.crop((0, 0, 960, 960))
+            nimg = np.array(img)
+            shape = nimg.shape
+            chips = chips_from_image(nimg, size)
+
+            chips = [(chip, xi, yi) for chip, xi, yi in chips if chip.sum() > 0]
+            prediction = np.zeros(shape[:2], dtype='uint8')
+
+            chip_preds = []
+            for chip in np.array([chip for chip, _, _ in chips]):
+                chip = np.expand_dims(np.array(chip), axis=0)
+                predicted_chip = model.predict(chip)
+                chip_preds.append(np.squeeze(predicted_chip))
+            chip_preds = np.array(chip_preds)
+
+            for (chip, x, y), pred in zip(chips, chip_preds):
+                category_chip = np.argmax(pred, axis=-1) + 1
+                section = prediction[y:y + size, x:x + size].shape
+                prediction[y:y + size, x:x + size] = category_chip[:section[0], :section[1]]
+
+            mask = category2mask(prediction)
+            mask_img = Image.fromarray(mask)
+            prediction_overlay_image = Image.blend(img, mask_img, alpha=0.5)
+            prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
+            continue
+            mask_img = mask_img.convert("RGBA")
+            newData = []
+            for item in mask_img.getdata():
+                if item[0] == 255 and item[1] == 255 and item[2] == 255:
+                    newData.append((255, 255, 255, 0))
+                else:
+                    newData.append((item[0], item[1], item[2], 153))
+            mask_img.putdata(newData)
+            img = img.convert("RGBA")
+            prediction_overlay_image = Image.alpha_composite(img, mask_img)
+            prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
 
 
 def generate_full_predict_image(basedir, input_file, output, model):
