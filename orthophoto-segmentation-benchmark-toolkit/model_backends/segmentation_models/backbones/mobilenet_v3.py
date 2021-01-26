@@ -589,6 +589,32 @@ def MobileNetV3Large(input_shape=None,
                        **kwargs)
 
 
+def MobileNetV3LargeMinimal(input_shape=None,
+                     alpha=1.0,
+                     minimalistic=True,
+                     include_top=True,
+                     weights='imagenet',
+                     input_tensor=None,
+                     classes=1000,
+                     pooling=None,
+                     dropout_rate=0.2,
+                     **kwargs):
+    return MobileNetV3Large(input_shape, alpha, minimalistic, include_top, weights, input_tensor, classes, pooling, dropout_rate, **kwargs)
+
+
+def MobileNetV3SmallMinimal(input_shape=None,
+                     alpha=1.0,
+                     minimalistic=True,
+                     include_top=True,
+                     weights='imagenet',
+                     input_tensor=None,
+                     classes=1000,
+                     pooling=None,
+                     dropout_rate=0.2,
+                     **kwargs):
+    return MobileNetV3Small(input_shape, alpha, minimalistic, include_top, weights, input_tensor, classes, pooling, dropout_rate, **kwargs)
+
+
 
 def preprocess_input(x, **kwargs):
     """Preprocesses a numpy array encoding a batch of images.

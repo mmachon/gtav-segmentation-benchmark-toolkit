@@ -12,8 +12,7 @@ class FPNBackend(ModelBackend):
 
     def compile(self):
         super().compile()
-        mobilenet_min = self.backbone in ["mobilenetv3_minimalistic", "mobilenetv3small_minimalistic"]
-        model_backend = FPN(self.backbone, input_shape=(self.chip_size, self.chip_size, 3), classes=6, activation="softmax", minimalistic=mobilenet_min)
+        model_backend = FPN(self.backbone, input_shape=(self.chip_size, self.chip_size, 3), classes=6, activation="softmax")
         model_backend.compile(
             optimizer=optimizers.Adam(lr=1e-4),
             loss='categorical_crossentropy',

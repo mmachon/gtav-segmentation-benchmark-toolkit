@@ -93,8 +93,8 @@ class BackbonesFactory(ModelsFactory):
 
         'mobilenetv3': [mbnv3.MobileNetV3Large, mbnv3.preprocess_input],
         'mobilenetv3small': [mbnv3.MobileNetV3Small, mbnv3.preprocess_input],
-        'mobilenetv3_minimalistic': [mbnv3.MobileNetV3Large, mbnv3.preprocess_input],
-        'mobilenetv3small_minimalistic': [mbnv3.MobileNetV3Small, mbnv3.preprocess_input],
+        'mobilenetv3_minimalistic': [mbnv3.MobileNetV3LargeMinimal, mbnv3.preprocess_input],
+        'mobilenetv3small_minimalistic': [mbnv3.MobileNetV3SmallMinimal, mbnv3.preprocess_input],
         'xception': [xc.Xception, xc.preprocess_input],
     }
 
