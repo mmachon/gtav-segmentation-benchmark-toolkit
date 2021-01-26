@@ -6,6 +6,7 @@ from tensorflow.keras.backend import clear_session
 import matplotlib.pyplot as plt
 from tensorflow.keras.callbacks import History
 from tqdm import tqdm
+from pathlib import Path
 
 from model_analyzer import ModelAnalyzer
 from scoring import *
@@ -47,7 +48,6 @@ class Experiment:
         os.makedirs(f"{self.basedir}/predictions")
         os.makedirs(f"{self.basedir}/predictions/chips")
         os.makedirs(f"{self.basedir}/export")
-        os.makedirs("./onnx_export")
 
     def save_config(self):
         pass
@@ -128,6 +128,7 @@ class Experiment:
                        "90_perc": np.percentile(inference_timings, 90)}, inference_json)
 
     def export_model(self):
+        Path("./onnx_export").mkdir(parents=True, exist_ok=True)
         self.model_backend.save(f"{self.basedir}/export/{self.experiment_title}")
         os.system(f"python -m tf2onnx.convert --saved-model {self.basedir}/export/{self.experiment_title} --opset 12 --output ./onnx_export/{self.experiment_title}")
 
