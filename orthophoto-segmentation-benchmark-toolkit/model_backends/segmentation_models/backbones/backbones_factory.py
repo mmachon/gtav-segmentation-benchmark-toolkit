@@ -56,7 +56,7 @@ class BackbonesFactory(ModelsFactory):
         'mobilenetv3': ('activation_29', 'activation_15', 'activation_6', 'activation_2'),
         'mobilenetv3_minimalistic': ('activation_24', 'activation_12', 'activation_6', 'activation_2'),
         'mobilenetv3small': ('activation_22', 'activation_7', 'activation_3', 'activation'),
-        'mobilenetv3small_minimalistic': ('activation_16', 'activation_6', 'activation_2', 'activation'),
+        'mobilenetv3small_minimalistic': ('activation_16', 'activation_6', 'activation_1', 'activation'),
 
         # EfficientNets
         'efficientnetb0': ('block6a_expand_activation', 'block4a_expand_activation',

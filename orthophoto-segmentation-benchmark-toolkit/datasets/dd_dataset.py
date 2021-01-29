@@ -217,8 +217,6 @@ class DroneDeployDataset(Dataset):
         with open(f"{prefix}/{self.chip_size}-chip_coverage-pol.json", 'w') as outfile:
             json.dump(self.coverage, outfile)
 
-        self.analyze()
-
     def convertImage(self, line):
         line = line.strip().split(' ')
         scene = line[1]

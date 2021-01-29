@@ -18,6 +18,4 @@ class UnetBackend(ModelBackend):
             loss='categorical_crossentropy',
             metrics=self.metrics
         )
-        model_backend.summary()
-        plot_model(model_backend, to_file="unetmobile2.png", show_shapes=True)
         return model_backend
