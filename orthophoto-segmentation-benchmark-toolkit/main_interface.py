@@ -33,7 +33,11 @@ if __name__ == '__main__':
         dataset = DroneDeployDataset(config["dataset_id"], config["chip_size"]).download().generate_chips()
     else:
         dataset = DroneDeployDataset(config["dataset_id"], config["chip_size"])
-    model_backend = config["model_backend"](config["model_backbone"], config["chip_size"])
+
+    if config["model_backbone"]:
+        model_backend = config["model_backend"](config["model_backbone"], config["chip_size"])
+    else:
+        model_backend = config["model_backend"](config["chip_size"])
     experiment = Experiment(config["experiment_title"], dataset, model_backend, batch_size=config["batch_size"],
                             experiment_directory=config["load_experiment"], load_best=config["load_best_model"])
 

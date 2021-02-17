@@ -3,6 +3,7 @@ from PIL import Image
 from util import *
 import cv2
 from timeit import default_timer as timer
+from tqdm import tqdm
 
 
 def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=True):
@@ -18,7 +19,7 @@ def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=Tru
         chip = np.expand_dims(np.array(chip), axis=0)
         model.predict(chip)
 
-    for chip, chip_id in chip_files:
+    for chip, chip_id in tqdm(chip_files):
         chip = np.expand_dims(np.array(chip), axis=0)
         start = timer()
         predicted_chip = model.predict(chip)

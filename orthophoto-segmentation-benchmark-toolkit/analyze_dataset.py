@@ -5,7 +5,7 @@ if __name__ == '__main__':
 
     dataset = 'dataset-medium'
 
-    dataset = DroneDeployDataset(dataset, 320).download().generate_chips()
+    dataset = DroneDeployDataset(dataset, 384).download().generate_chips()
     train_distribution = dataset.analyze("./dataset-medium/label-chips/training")
     valid_distribution = dataset.analyze("./dataset-medium/label-chips/validation")
     test_distribution = dataset.analyze("./dataset-medium/label-chips/test")
