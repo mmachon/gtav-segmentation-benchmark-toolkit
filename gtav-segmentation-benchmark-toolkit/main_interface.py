@@ -21,8 +21,8 @@ if __name__ == '__main__':
         "chip_size": 384,
         "batch_size": 8,
         "epochs": 40,
-        "model_backbone": "mobilenetv3_minimalistic",
-        "model_backend": PSPnetBackend,
+        "model_backbone": "efficientnetb2",
+        "model_backend": FPNBackend,
         "load_experiment": "",
         "load_best_model": True,
     }
