@@ -91,7 +91,7 @@ class Experiment:
         if postprocessing:
             smooth_tiled_prediction(self.model_backend, self.dataset.chip_size, 6, imagefile, output)
         else:
-            generate_predict_image(self.basedir, imagefile, output, self.model_backend, self.dataset.chip_size)
+            generate_predict_image(self.basedir, imagefile, output, self.model_backend, self.dataset.chip_size, save_prediction=True, save_overlay=True)
 
     def score(self):
         scores = self.scoring_backend.score_predictions(self.dataset.dataset_name)
