@@ -10,11 +10,13 @@ from multiprocessing import Pool
 
 from .util import closest_color
 
-
 from .dd_dataset_config import train_ids, val_ids, test_ids, LABELMAP, INV_LABELMAP
+from .gta_dataset_config import gta_train_ids, gta_val_ids, gta_test_ids
 from .dataset import Dataset
 
 URLS = {
+    'dataset-gta-1280': 'https://dl.dropboxusercontent.com/s/emxxc0877j4w9as/dataset-gta-1280.tar.gz?dl=0',
+    'dataset-gta-3200': 'https://dl.dropboxusercontent.com/s/3uu5q474gscq9cs/dataset-gta-3200.tar.gz?dl=0',
     'dataset-sample': 'https://dl.dropboxusercontent.com/s/h8a8kev0rktf4kq/dataset-sample.tar.gz?dl=0',
     'dataset-medium': 'https://dl.dropboxusercontent.com/s/r0dj9mhyv4bgbme/dataset-medium.tar.gz?dl=0',
 }
@@ -111,7 +113,7 @@ class DroneDeployDataset(Dataset):
         ret = np.dstack([ret, ret, ret])
         colors = np.unique(img.reshape(-1, img.shape[2]), axis=0)
 
-        # Skip any chips that would contain magenta (IGNORE) pixels
+        # Skip any chips that would contain magenta (IGNORE) pixels in DD dataset
         seen_colors = set([tuple(color) for color in colors])
         IGNORE_COLOR = LABELMAP[0]
         if IGNORE_COLOR in seen_colors:
@@ -173,12 +175,26 @@ class DroneDeployDataset(Dataset):
         return counter, chip_coverage
 
     def get_split(self, scene):
-        if scene in train_ids:
-            return "train.txt"
-        if scene in val_ids:
-            return 'valid.txt'
-        if scene in test_ids:
-            return 'test.txt'
+        try:
+            if self.dataset_name=="dataset-medium":
+                if scene in train_ids:
+                    return "train.txt"
+                if scene in val_ids:
+                    return 'valid.txt'
+                if scene in test_ids:
+                    return 'test.txt'
+
+            if self.dataset_name=="dataset-gta-1280" or self.dataset_name=="dataset-gta-3200":
+                if scene in gta_train_ids:
+                    return "train.txt"
+                if scene in gta_val_ids:
+                    return 'valid.txt'
+                if scene in gta_test_ids:
+                    return 'test.txt'
+
+        except ValueError:
+            print("Dataset not found.")
+            
 
     def run_chip_generator(self):
 
@@ -205,7 +221,7 @@ class DroneDeployDataset(Dataset):
 
         lines = [line for line in open(f'{prefix}/index.csv')]
         lines = list(dict.fromkeys(lines))
-        num_images = len(lines) - 1
+        num_images = len(lines)
         print(f"converting {num_images} images to chips - this may take a few minutes but only needs to be done once.")
 
         pool = Pool(processes=self.worker)
@@ -223,7 +239,14 @@ class DroneDeployDataset(Dataset):
         dataset = self.get_split(scene)
 
         label_dir = "cleaned-labels" if os.path.isdir(f"{self.dataset_name}/cleaned-labels") else "labels"
-        orthofile = os.path.join(self.dataset_name, 'images', scene + '-ortho.tif')
+        try:
+            if self.dataset_name=="dataset-medium":
+                orthofile = os.path.join(self.dataset_name, 'images', scene + '-ortho.tif')
+            if self.dataset_name=="dataset-gta-1280" or self.dataset_name=="dataset-gta-3200":
+                orthofile = os.path.join(self.dataset_name, 'images', scene + '-ortho.png')
+        except ValueError:
+            print("Dataset not found.")
+
         labelfile = os.path.join(self.dataset_name, label_dir, scene + '-label.png')
         if os.path.exists(orthofile) and os.path.exists(labelfile):
             chip_count, scene_coverage = self.image2tile(self.dataset_name, scene, dataset, orthofile, labelfile, self.chip_size,

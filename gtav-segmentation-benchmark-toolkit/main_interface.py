@@ -16,15 +16,16 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     config = {
-        "experiment_title": "testgen",
-        "dataset_id": "dataset-medium",
-        "chip_size": 384,
-        "batch_size": 8,
-        "epochs": 40,
-        "model_backbone": "efficientnetb2",
-        "model_backend": FPNBackend,
-        "load_experiment": "",
-        "load_best_model": True,
+
+        "experiment_title": "testgen",          # choose a experiment title
+        "dataset_id": "dataset-gta-1280",       # select a dataset, currently supported: [dataset-gta-1280, dataset-gta-3200, dataset-medium, dataset-sample]
+        "chip_size": 384,                       # choose chip_size to generate from images and labels
+        "batch_size": 8,                        # choose number of batch_size
+        "epochs": 40,                           # choose number of epochs
+        "model_backbone": "efficientnetb2",     # select encoder
+        "model_backend": FPNBackend,            # select architechture
+        "load_experiment": "",                  # experiment title of the model to load
+        "load_best_model": True,                # decide whether to use the best or last epoch model of the loaded experiment
     }
 
     enable_dynamic_memory_growth()
