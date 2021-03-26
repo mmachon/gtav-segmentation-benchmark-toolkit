@@ -89,7 +89,7 @@ class Experiment:
 
     def predict(self, imagefile, output, postprocessing=False):
         if postprocessing:
-            smooth_tiled_prediction(self.model_backend, self.dataset.chip_size, 6, imagefile, output)
+            smooth_tiled_prediction(self.basedir, self.model_backend, self.dataset.chip_size, 6, imagefile, output, save_overlay=True)
         else:
             generate_predict_image(self.basedir, imagefile, output, self.model_backend, self.dataset.chip_size, save_prediction=True, save_overlay=True)
 

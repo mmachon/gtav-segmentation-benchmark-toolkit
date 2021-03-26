@@ -9,6 +9,7 @@
 """Do smooth predictions on an image from tiled prediction patches."""
 
 
+import os
 import numpy as np
 import scipy.signal
 from tqdm import tqdm
@@ -172,7 +173,7 @@ def _windowed_subdivs(padded_img, window_size, subdivisions, nb_classes, pred_fu
 
     for i in range(0, padx_len-window_size+1, step):
         subdivs.append([])
-        for j in range(0, padx_len-window_size+1, step):
+        for j in range(0, pady_len-window_size+1, step):
             patch = padded_img[i:i+window_size, j:j+window_size, :]
             subdivs[-1].append(patch)
 
@@ -211,7 +212,7 @@ def _recreate_from_subdivs(subdivs, window_size, subdivisions, padded_out_shape)
     a = 0
     for i in range(0, padx_len-window_size+1, step):
         b = 0
-        for j in range(0, padx_len-window_size+1, step):
+        for j in range(0, pady_len-window_size+1, step):
             windowed_patch = subdivs[a, b]
             y[i:i+window_size, j:j+window_size] = y[i:i+window_size, j:j+window_size] + windowed_patch
             b += 1
@@ -351,9 +352,10 @@ def category2mask(img):
     return mask
 
 
-def smooth_tiled_prediction(model, window_size, nb_classes, input_img, output):
+def smooth_tiled_prediction(basedir, model, window_size, nb_classes, input_img, output, save_overlay=False):
     # Use the algorithm. The `pred_func` is passed and will process all the image 8-fold by tiling small patches with overlap, called once with all those image as a batch outer dimension.
     # Note that model.predict(...) accepts a 4D tensor of shape (batch, x, y, nb_channels), such as a Keras model.
+    output_file = os.path.join(basedir, f'predictions/{output}-smooth-prediction.png')
     input_img = np.array(Image.open(input_img).convert('RGB'))
     predictions_smooth = predict_img_with_smooth_windowing(
         input_img,
@@ -365,4 +367,7 @@ def smooth_tiled_prediction(model, window_size, nb_classes, input_img, output):
     predictions_smooth = np.argmax(predictions_smooth, axis=-1) + 1
     mask = category2mask(predictions_smooth)
     mask_img = Image.fromarray(mask)
-    mask_img.save(output)
+    mask_img.save(output_file)
+    if save_overlay:
+        prediction_overlay_image = Image.blend(input_img, mask_img, alpha=0.5)
+        prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
