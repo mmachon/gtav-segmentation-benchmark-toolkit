@@ -356,7 +356,8 @@ def smooth_tiled_prediction(basedir, model, window_size, nb_classes, input_img, 
     # Use the algorithm. The `pred_func` is passed and will process all the image 8-fold by tiling small patches with overlap, called once with all those image as a batch outer dimension.
     # Note that model.predict(...) accepts a 4D tensor of shape (batch, x, y, nb_channels), such as a Keras model.
     output_file = os.path.join(basedir, f'predictions/{output}-smooth-prediction.png')
-    input_img = np.array(Image.open(input_img).convert('RGB'))
+    img = Image.open(input_img).convert('RGB')
+    input_img = np.array(img)
     predictions_smooth = predict_img_with_smooth_windowing(
         input_img,
         window_size=window_size,
@@ -369,5 +370,5 @@ def smooth_tiled_prediction(basedir, model, window_size, nb_classes, input_img, 
     mask_img = Image.fromarray(mask)
     mask_img.save(output_file)
     if save_overlay:
-        prediction_overlay_image = Image.blend(input_img, mask_img, alpha=0.5)
+        prediction_overlay_image = Image.blend(img, mask_img, alpha=0.5)
         prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
