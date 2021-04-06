@@ -19,6 +19,7 @@ URLS = {
     'dataset-gta-3200': 'https://dl.dropboxusercontent.com/s/3uu5q474gscq9cs/dataset-gta-3200.tar.gz?dl=0',
     'dataset-sample': 'https://dl.dropboxusercontent.com/s/h8a8kev0rktf4kq/dataset-sample.tar.gz?dl=0',
     'dataset-medium': 'https://dl.dropboxusercontent.com/s/r0dj9mhyv4bgbme/dataset-medium.tar.gz?dl=0',
+    'dataset-c2land': '',
 }
 
 

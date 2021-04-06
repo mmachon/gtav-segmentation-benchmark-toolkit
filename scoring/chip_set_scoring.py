@@ -28,7 +28,6 @@ class ChipSetScoring(Scoring):
             for color, category in INV_LABELMAP.items():
                 locs = self.wherecolor(test_chip_prediction, color)
                 test_chip_prediction[locs] = category - 1
-            # TODO SCORE LABELS
             test_chip_labels.append(np.amax(test_chip_label, axis=-1))
             test_chips_predictions.append(np.amax(test_chip_prediction, axis=-1))
 
@@ -50,8 +49,10 @@ class ChipSetScoring(Scoring):
         mean_jaccard = jaccard_score(test_chip_label_concat, test_chip_prediction_concat, average='macro')
         print("Calculating fw_mIOU")
         weighted_mean_jaccard = jaccard_score(test_chip_label_concat, test_chip_prediction_concat, average='weighted')
+        
         print(f'precision={precision} recall={recall}')
         print(f"IOU: {jaccard}")
+        print(f"classIOU: Building: {jaccard[0]} Clutter: {jaccard[1]} Vegetation: {jaccard[2]} Water: {jaccard[3]} Ground: {jaccard[4]} Car: {jaccard[5]}")
         print(f"mIOU={mean_jaccard}")
         print(f"fw_mIOU={weighted_mean_jaccard}")
 

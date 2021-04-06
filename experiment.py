@@ -98,29 +98,49 @@ class Experiment:
         with open(f"{self.basedir}/scores.json", 'w') as score_json:
             json.dump(scores, score_json)
 
-    def score_generalization(self, gsd=10):
-        if gsd == 10:
-            path = "./dataset-potsdam/2_Ortho_RGB_gsd10"
-        else:
-            path = "./dataset-potsdam/2_Ortho_RGB"
-        potsdam_images = os.listdir(path)
-        if not os.path.isdir(f"{self.basedir}/predictions/potsdam"):
-            os.makedirs(f"{self.basedir}/predictions/potsdam")
-            print("Creating Potsdam image predictions")
-            for image in tqdm(potsdam_images):
-                generate_predict_image(self.basedir, f"{path}/{image}", f"potsdam/{image[:-4]}",
-                                       self.model_backend, self.dataset.chip_size)
-        self.scoring_backend = PotsdamScoring(self.basedir, gsd)
-        scores = self.scoring_backend.score_predictions("dataset-potsdam")
-        with open(f"{self.basedir}/potsdam_scores.json", 'w') as score_json:
-            json.dump(scores, score_json)
+    def score_generalization(self, gsd=10, postprocessing=False):
+        if self.dataset.dataset_name=="dataset-potsdam":
+            if gsd == 10:
+                path = "./dataset-potsdam/2_Ortho_RGB_gsd10"
+            else:
+                path = "./dataset-potsdam/2_Ortho_RGB"
+            potsdam_images = os.listdir(path)
+            if not os.path.isdir(f"{self.basedir}/predictions/potsdam"):
+                os.makedirs(f"{self.basedir}/predictions/potsdam")
+                print("Creating Potsdam image predictions")
+                for image in tqdm(potsdam_images):
+                    generate_predict_image(self.basedir, f"{path}/{image}", f"potsdam/{image[:-4]}",
+                                        self.model_backend, self.dataset.chip_size)
+            self.scoring_backend = PotsdamScoring(self.basedir, gsd)
+            scores = self.scoring_backend.score_predictions("dataset-potsdam")
+            with open(f"{self.basedir}/potsdam_scores.json", 'w') as score_json:
+                json.dump(scores, score_json)
+
+        if self.dataset.dataset_name=="dataset-c2land" or self.dataset.dataset_name=="dataset-c2land-ahead" or self.dataset.dataset_name=="dataset-medium":
+            path = "./" + self.dataset.dataset_name
+            images = os.listdir(path + "/images")
+
+            if postprocessing==False:
+                if not os.path.isdir(f"{self.dataset.dataset_name}/predictions"):
+                    os.makedirs(f"{self.dataset.dataset_name}/predictions")
+                    print("Creating image predictions for " + self.dataset.dataset_name)
+                    for image in tqdm(images):
+                        generate_predict_image(path, f"{path}/images/{image}", image[:-10],
+                                            self.model_backend, self.dataset.chip_size)
+            #if postprocessing==True:
+                # TODO smooth prediction
+
+            scores = ImageSetScoring(self.basedir).score_predictions(self.dataset.dataset_name)
+            with open(f"{self.basedir}/generalization_scores.json", 'w') as score_json:
+                json.dump(scores, score_json)
+            
 
     def benchmark_inference(self):
         print("Starting Benchmark")
         chip_file_list = [f"./{self.dataset.dataset_name}/image-chips/test/{chip_file}"
                           for chip_file in os.listdir(f"./{self.dataset.dataset_name}/image-chips/test")]
         inference_timings = predict_chips_benchmark(self.basedir, chip_file_list, self.model_backend)
-        with open(f"{self.basedir}/inferenc_benchmark.json", "w") as inference_json:
+        with open(f"{self.basedir}/inference_benchmark.json", "w") as inference_json:
             json.dump({"timings": inference_timings,
                        "mean": np.mean(inference_timings),
                        "std": np.std(inference_timings),

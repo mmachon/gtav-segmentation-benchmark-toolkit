@@ -62,11 +62,15 @@ class ImageSetScoring(Scoring):
         weighted_mean_jaccard = []
 
         predictions = []
-        confusions = []
+        # confusions = []
 
+        if dataset=="dataset-c2land" or dataset=="dataset-c2land-ahead" or dataset=="dataset-medium":
+            test_ids = [image_file[:-10]
+                          for image_file in os.listdir(f"./{dataset}/images")]
+            
         for i, scene in enumerate(test_ids):
-            labelfile = f'{dataset}/labels/{scene}-label.png'
-            predsfile = os.path.join(self.basedir, f"predictions/{scene}-prediction.png")
+            labelfile = f'./{dataset}/labels/{scene}-label.png'
+            predsfile = f'./{dataset}/predictions/{scene}-prediction.png'
 
             if not os.path.exists(labelfile):
                 continue
@@ -76,7 +80,7 @@ class ImageSetScoring(Scoring):
 
             print(f"Calculating score {i}/{len(test_ids)} for {scene}")
 
-            prec, rec, jac, m_jac, w_jac, savefile = self.score_masks(labelfile, predsfile, scene)
+            prec, rec, jac, m_jac, w_jac = self.score_masks(labelfile, predsfile, scene) # variabble savefile removed after w_jac
 
             precision.append(prec)
             recall.append(rec)
@@ -85,7 +89,7 @@ class ImageSetScoring(Scoring):
             weighted_mean_jaccard.append(w_jac)
 
             predictions.append(predsfile)
-            confusions.append(savefile)
+            # confusions.append(savefile)
 
         class_jaccard = np.array(jaccard).transpose()
 
@@ -113,16 +117,21 @@ class ImageSetScoring(Scoring):
             'car_jc_std': np.std(class_jaccard[5]),
         }
 
+        class_jaccard = list(class_jaccard.tolist())
+
         score_dict = {
             "precision": precision,
             "recall": recall,
             "mean_jaccard": mean_jaccard,
             "weighted_mean_jaccard": weighted_mean_jaccard,
-            "jaccard_classwise": class_jaccard.tolist(),
+         #   "jaccard_classwise": class_jaccard,
             "score_means": scores_means
         }
 
-        scoring_file_path = f"{self.basedir}/scoring_summary.json"
-        print(f"Writing scores to {scoring_file_path}")
-        with open(scoring_file_path, 'w') as outfile:
-            json.dump(score_dict, outfile)
+        #scoring_file_path = f"{self.basedir}/scoring_summary.json"
+        #print(f"Writing scores to {scoring_file_path}")
+        #with open(scoring_file_path, 'w') as outfile:
+        #    json.dump(score_dict, outfile)
+        
+        return score_dict
+
