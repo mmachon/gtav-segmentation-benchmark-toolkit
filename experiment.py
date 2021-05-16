@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from tensorflow.keras.callbacks import History
 from tqdm import tqdm
 from pathlib import Path
+import shutil
 
 from model_analyzer import ModelAnalyzer
 from scoring import *
@@ -23,13 +24,13 @@ class Experiment:
         # NEW EXPERIMENT
         if experiment_directory == "":
             self.experiment_title = f"{title}-{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}"
-            self.basedir = os.path.join(f"{os.getcwd()}/experiments", self.experiment_title)
+            self.basedir = os.path.join(f"{os.getcwd()}{os.path.sep}experiments", self.experiment_title)
             self.init_experiment_directory_structure()
             self.model_backend = model_backend.compile()
         # LOAD EXPERIMENT
         else:
             self.experiment_title = experiment_directory
-            self.basedir = os.path.join(f"{os.getcwd()}/experiments", experiment_directory)
+            self.basedir = os.path.join(f"{os.getcwd()}{os.path.sep}experiments", experiment_directory)
             print(f"Loading experiment {experiment_directory}")
             if load_best:
                 self.model_backend = model_backend.load(f"{self.basedir}/models/checkpoint")
@@ -88,14 +89,32 @@ class Experiment:
             json.dump(history.history, outfile)
 
     def predict(self, imagefile, output, postprocessing=False):
+        start = timer()
+        
+        datasetPrefix = f"{self.dataset.dataset_name}_{self.dataset.chip_size}ch/"
         if postprocessing:
-            smooth_tiled_prediction(self.basedir, self.model_backend, self.dataset.chip_size, 6, imagefile, output, save_overlay=True)
+            smooth_tiled_prediction(self.basedir, self.model_backend, self.dataset.chip_size, 6, imagefile, datasetPrefix + output, save_overlay=True)
         else:
-            generate_predict_image(self.basedir, imagefile, output, self.model_backend, self.dataset.chip_size, save_prediction=True, save_overlay=True)
+            generate_predict_image(self.basedir, imagefile, datasetPrefix + output, self.model_backend, self.dataset.chip_size, save_prediction=True, save_overlay=True)
+
+        end = timer()
+
+        if postprocessing:
+            shutil.move(f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/{output}-smooth-prediction.png",
+                            f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/smooth-predictions")
+            shutil.move(f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/{output}-smooth-prediction-overlay.png",
+                            f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/overlay-predictions")
+        else:
+            shutil.move(f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/{output}-prediction.png",
+                            f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/predictions")
+            shutil.move(f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/{output}-prediction-overlay.png",
+                            f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/overlay-predictions")
+
+        return (end - start)
 
     def score(self):
         scores = self.scoring_backend.score_predictions(self.dataset.dataset_name)
-        with open(f"{self.basedir}/scores.json", 'w') as score_json:
+        with open(f"{self.basedir}/score-metrics.json", 'w') as score_json:
             json.dump(scores, score_json)
 
     def score_generalization(self, gsd=10, postprocessing=False):
@@ -117,23 +136,25 @@ class Experiment:
                 json.dump(scores, score_json)
 
         if self.dataset.dataset_name=="dataset-c2land" or self.dataset.dataset_name=="dataset-c2land-ahead" or self.dataset.dataset_name=="dataset-medium":
-            path = "./" + self.dataset.dataset_name
-            images = os.listdir(path + "/images")
+            path_images = "./" + self.dataset.dataset_name
+            images = os.listdir(path_images + "/images")
+            path_predictions = "./experiments/" + self.experiment_title + "/predictions/" + self.dataset.dataset_name + "_" + str(self.dataset.chip_size) + "ch"
 
             if postprocessing==False:
-                if not os.path.isdir(f"{self.dataset.dataset_name}/predictions"):
-                    os.makedirs(f"{self.dataset.dataset_name}/predictions")
-                    print("Creating image predictions for " + self.dataset.dataset_name)
-                    for image in tqdm(images):
-                        generate_predict_image(path, f"{path}/images/{image}", image[:-10],
-                                            self.model_backend, self.dataset.chip_size)
-            #if postprocessing==True:
-                # TODO smooth prediction
+                if not os.path.isdir(f"{path_predictions}/predictions"):
+                   print(f"No image predictions folder found in {path_predictions} , first run prediction -p")
+                else:
+                    scores = ImageSetScoring(self.basedir).score_predictions(self.dataset.dataset_name, self.dataset.chip_size, postprocessing)
+                    with open(f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/generalization_scores.json", 'w') as score_json:
+                        json.dump(scores, score_json)
 
-            scores = ImageSetScoring(self.basedir).score_predictions(self.dataset.dataset_name)
-            with open(f"{self.basedir}/generalization_scores.json", 'w') as score_json:
-                json.dump(scores, score_json)
-            
+            if postprocessing==True:
+                if not os.path.isdir(f"{path_predictions}/smooth-predictions"):
+                    print(f"No image predictions folder found in {path_predictions} , first run prediction -p")
+                else:
+                    scores = ImageSetScoring(self.basedir).score_predictions(self.dataset.dataset_name, self.dataset.chip_size, postprocessing)
+                    with open(f"{self.basedir}/predictions/{self.dataset.dataset_name}_{self.dataset.chip_size}ch/generalization_scores_smooth.json", 'w') as score_json:
+                        json.dump(scores, score_json)
 
     def benchmark_inference(self):
         print("Starting Benchmark")

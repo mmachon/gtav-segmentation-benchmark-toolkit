@@ -2,6 +2,8 @@ import os
 import cv2
 import json
 
+from cv2 import data
+
 from .scoring import Scoring
 from datasets.dd_dataset_config import INV_LABELMAP, test_ids
 
@@ -43,7 +45,7 @@ class ImageSetScoring(Scoring):
         print(classification_report(label_class, pred_class, [0, 1, 2, 3, 4, 5]))
         precision = precision_score(label_class, pred_class, average='weighted')
         recall = recall_score(label_class, pred_class, average='weighted')
-        jaccard = jaccard_score(label_class, pred_class, average=None)
+        jaccard = jaccard_score(label_class, pred_class, average=None, labels=[0,1,2,3,4,5])
         mean_jaccard = jaccard_score(label_class, pred_class, average='macro')
         weighted_mean_jaccard = jaccard_score(label_class, pred_class, average='weighted')
         print(f'precision={precision} recall={recall}')
@@ -53,7 +55,7 @@ class ImageSetScoring(Scoring):
 
         return precision, recall, jaccard, mean_jaccard, weighted_mean_jaccard
 
-    def score_predictions(self, dataset):
+    def score_predictions(self, dataset, chip_size="", postprocessing=False):
 
         precision = []
         recall = []
@@ -70,7 +72,10 @@ class ImageSetScoring(Scoring):
             
         for i, scene in enumerate(test_ids):
             labelfile = f'./{dataset}/labels/{scene}-label.png'
-            predsfile = f'./{dataset}/predictions/{scene}-prediction.png'
+            if postprocessing==True:
+                predsfile = self.basedir + "/predictions/" + dataset + "_" + str(chip_size) + "ch/smooth-predictions/" + scene + "-smooth-prediction.png"
+            else:
+                predsfile = self.basedir + "/predictions/" + dataset + "_" + str(chip_size) + "ch/predictions/" + scene + "-prediction.png"
 
             if not os.path.exists(labelfile):
                 continue
@@ -80,7 +85,7 @@ class ImageSetScoring(Scoring):
 
             print(f"Calculating score {i}/{len(test_ids)} for {scene}")
 
-            prec, rec, jac, m_jac, w_jac = self.score_masks(labelfile, predsfile, scene) # variabble savefile removed after w_jac
+            prec, rec, jac, m_jac, w_jac = self.score_masks(labelfile, predsfile, scene) # variable savefile removed after w_jac
 
             precision.append(prec)
             recall.append(rec)

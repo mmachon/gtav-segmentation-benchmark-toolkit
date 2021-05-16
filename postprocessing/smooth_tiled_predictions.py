@@ -9,6 +9,7 @@
 """Do smooth predictions on an image from tiled prediction patches."""
 
 
+from io import BufferedIOBase
 import os
 import numpy as np
 import scipy.signal
@@ -356,6 +357,14 @@ def smooth_tiled_prediction(basedir, model, window_size, nb_classes, input_img, 
     # Use the algorithm. The `pred_func` is passed and will process all the image 8-fold by tiling small patches with overlap, called once with all those image as a batch outer dimension.
     # Note that model.predict(...) accepts a 4D tensor of shape (batch, x, y, nb_channels), such as a Keras model.
     output_file = os.path.join(basedir, f'predictions/{output}-smooth-prediction.png')
+    output_file_overlay = os.path.join(basedir, f'predictions/{output}-smooth-prediction-overlay.png')
+    
+    # if not os.path.isdir(f"{basedir}/predictions/smooth-predictions"):
+    #     os.mkdir(f"{basedir}/predictions/smooth-predictions")
+
+    # if not os.path.isdir(f"{basedir}/predictions/prediction-overlays"):
+    #     os.mkdir(f"{basedir}/predictions/prediction-overlays")
+
     img = Image.open(input_img).convert('RGB')
     input_img = np.array(img)
     predictions_smooth = predict_img_with_smooth_windowing(
@@ -371,4 +380,4 @@ def smooth_tiled_prediction(basedir, model, window_size, nb_classes, input_img, 
     mask_img.save(output_file)
     if save_overlay:
         prediction_overlay_image = Image.blend(img, mask_img, alpha=0.5)
-        prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
+        prediction_overlay_image.save(output_file_overlay)

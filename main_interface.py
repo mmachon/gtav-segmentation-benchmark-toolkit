@@ -3,6 +3,7 @@ from experiment import Experiment
 from datasets import DroneDeployDataset
 from util import *
 from model_backends import *
+from inference.experiment_predict import experiment_predict
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -16,16 +17,18 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     config = {
-
-        "experiment_title": "testgen",          # choose a experiment title
-        "dataset_id": "dataset-gta-1280",       # select a dataset, currently supported: [dataset-gta-1280, dataset-gta-3200, dataset-medium, dataset-sample]
-        "chip_size": 384,                       # choose chip_size to generate from images and labels
+        "experiment_title": "test",             # choose a experiment title
+        "dataset_id": "dataset-gta-1280",       # select a dataset, currently supported: [dataset-gta-1280, dataset-gta-3200, 
+                                                # dataset-c2land, dataset-medium, dataset-sample]
+        "chip_size": 192,                       # choose chip_size to generate from images and labels
         "batch_size": 8,                        # choose number of batch_size
         "epochs": 40,                           # choose number of epochs
         "model_backbone": "efficientnetb2",     # select encoder
         "model_backend": FPNBackend,            # select architechture
-        "load_experiment": "",                  # experiment title of the model to load
+        "load_experiment": "",                  # experiment title of the model to load 
         "load_best_model": True,                # decide whether to use the best or last epoch model of the loaded experiment
+        "prediction_postprocessing": False,     # decide wheter to use smooth tile prediction in
+                                                # --score_generalisation and --predict
     }
 
     enable_dynamic_memory_growth()
@@ -60,10 +63,10 @@ if __name__ == '__main__':
         exit()
 
     if args.score_generalisation:
-        experiment.score_generalization()
+        experiment.score_generalization(postprocessing=config["prediction_postprocessing"])
 
     if args.predict:
-        experiment.predict("./RGB100MP_2020-06-02_10-05-18cropsq.tif", "./testpp4.png", postprocessing=True)
+        experiment_predict(config, experiment)
 
     if args.export:
         experiment.export_model()

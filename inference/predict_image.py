@@ -42,6 +42,14 @@ def predict_chips_benchmark(basedir, chip_file_list, model, save_predictions=Tru
 
 def generate_predict_image(basedir, input_file, output, model, chip_size, save_prediction=True, save_overlay=False):
     output_file = os.path.join(basedir, f'predictions/{output}-prediction.png')
+    output_file_overlay = os.path.join(basedir, f'predictions/{output}-prediction-overlay.png')
+    
+    # if not os.path.isdir(f"{basedir}/predictions/predictions"):
+    #     os.mkdir(f"{basedir}/predictions/predictions")
+
+    # if not os.path.isdir(f"{basedir}/predictions/prediction-overlays"):
+    #     os.mkdir(f"{basedir}/predictions/prediction-overlays")
+
     size = chip_size
     with Image.open(input_file).convert('RGB') as img:
         nimg = np.array(Image.open(input_file).convert('RGB'))
@@ -69,7 +77,7 @@ def generate_predict_image(basedir, input_file, output, model, chip_size, save_p
             mask_img.save(output_file)
             if save_overlay:
                 prediction_overlay_image = Image.blend(img, mask_img, alpha=0.5)
-                prediction_overlay_image.save(f"{output_file[:-4]}-overlay.png")
+                prediction_overlay_image.save(output_file_overlay)
         else:
             return mask
         # generate_prediction_chips(np.array(prediction_overlay_image), chip_size, basedir, output)

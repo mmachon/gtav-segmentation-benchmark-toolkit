@@ -19,7 +19,7 @@ URLS = {
     'dataset-gta-3200': 'https://dl.dropboxusercontent.com/s/3uu5q474gscq9cs/dataset-gta-3200.tar.gz?dl=0',
     'dataset-sample': 'https://dl.dropboxusercontent.com/s/h8a8kev0rktf4kq/dataset-sample.tar.gz?dl=0',
     'dataset-medium': 'https://dl.dropboxusercontent.com/s/r0dj9mhyv4bgbme/dataset-medium.tar.gz?dl=0',
-    'dataset-c2land': '',
+    'dataset-c2land': 'https://dl.dropboxusercontent.com/s/utwwnfxdwxw2b37/dataset-c2land.tar.gz?dl=0',
 }
 
 
@@ -245,6 +245,8 @@ class DroneDeployDataset(Dataset):
                 orthofile = os.path.join(self.dataset_name, 'images', scene + '-ortho.tif')
             if self.dataset_name=="dataset-gta-1280" or self.dataset_name=="dataset-gta-3200":
                 orthofile = os.path.join(self.dataset_name, 'images', scene + '-ortho.png')
+            if self.dataset_name=="dataset-c2land":
+                orthofile = os.path.join(self.dataset_name, 'images', scene + '-ortho.jpg')
         except ValueError:
             print("Dataset not found.")
 
