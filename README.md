@@ -52,8 +52,6 @@ python3 main_interface.py -t
 
 A new directory at experiments/ will be created where the model and additional files like a model summary and plots of the train/validation loss and mIoU will be placed after training finished 
 
-## Predict
-
 ## Score
 
 To evalutate the model performance generate predictions of the test chip and start scroing by executing the command
@@ -64,10 +62,32 @@ python3 main_interface.py -b -s
 ```
 This will create a inference_benchmark.json file inference timings and a scores.json with precision, recall, class-vise IoU, mIoU and frequency weighted mIoU will be created 
 
+## Predict
+To predict the selected dataset from config by executing the command
+
+```bash
+python3 main_interface.py -p
+
+```
+
+If prediction dataset hasn't been initialized yet execute the command
+
+```bash
+python3 main_interface.py -i
+```
+
+## Score Generalization
+To evalutate the model performance of a predicted dataset by executing the command
+
+```bash
+python3 main_interface.py -sg
+
+```
+
 ## Export
 
 ```bash
-python3 main_interface.py -b -s
+python3 main_interface.py -e
 
 ```
 
